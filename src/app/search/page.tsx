@@ -28,6 +28,15 @@ function SearchContent() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // 记录搜索日志（用于热门搜索词统计）
+    if (q && q.trim().length >= 2) {
+      fetch('/api/search/hot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword: q.trim() }),
+      }).catch(() => {});
+    }
   }, [q, tag]);
 
   const searchTitle = q || tag || '';

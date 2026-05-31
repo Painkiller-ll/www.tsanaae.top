@@ -131,6 +131,26 @@ export function getUserLevel(points: number): UserLevel {
   return result;
 }
 
+export interface Collection {
+  id: string;
+  title: string;
+  description?: string;
+  cover_image?: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at?: string;
+  games?: Game[];
+}
+
+export interface ShareRecord {
+  id: string;
+  user_id: string;
+  game_id: string;
+  platform: string;
+  created_at: string;
+}
+
 export interface PointTask {
   id: string;
   name: string;

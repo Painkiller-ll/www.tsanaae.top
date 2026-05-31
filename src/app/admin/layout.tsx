@@ -10,7 +10,9 @@ interface AdminLayoutProps {
 
 const navItems = [
   { href: '/admin', label: '仪表盘', icon: '📊' },
+  { href: '/admin/stats', label: '数据统计', icon: '📈' },
   { href: '/admin/games', label: '游戏管理', icon: '🎮' },
+  { href: '/admin/collections', label: '合集管理', icon: '📚' },
   { href: '/admin/categories', label: '分类管理', icon: '📁' },
   { href: '/admin/tags', label: '标签管理', icon: '🏷️' },
   { href: '/admin/comments', label: '评论管理', icon: '💬' },

@@ -1,25 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface Tag {
   id: string;
   name: string;
-  created_at: string;
 }
 
 export default function AdminTagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [tagName, setTagName] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [batchMode, setBatchMode] = useState(false);
-  const [batchNames, setBatchNames] = useState('');
+  const [newTagName, setNewTagName] = useState('');
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [editName, setEditName] = useState('');
+  const [error, setError] = useState('');
 
-  const loadTags = async () => {
+  const fetchTags = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/tags');
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('admin_token='))
+        ?.split('=')[1];
+
+      const res = await fetch('/api/admin/tags', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setTags(data.tags || []);
     } catch {
@@ -27,157 +32,171 @@ export default function AdminTagsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadTags();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchTags();
+  }, [fetchTags]);
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
+    setError('');
+
+    if (!newTagName.trim()) return;
+
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('admin_token='))
+      ?.split('=')[1];
+
     try {
-      if (batchMode) {
-        const names = batchNames
-          .split(/[,，\n]/)
-          .map((n) => n.trim())
-          .filter(Boolean);
+      const res = await fetch('/api/admin/tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newTagName.trim() }),
+      });
 
-        for (const name of names) {
-          await fetch('/api/admin/tags', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name }),
-          });
-        }
+      const data = await res.json();
+      if (res.ok) {
+        setNewTagName('');
+        fetchTags();
       } else {
-        const res = await fetch('/api/admin/tags', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: tagName }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json();
-          alert(data.error || '添加失败');
-          return;
-        }
+        setError(data.error || '创建失败');
       }
-
-      setTagName('');
-      setBatchNames('');
-      setShowForm(false);
-      loadTags();
     } catch {
-      alert('网络错误，请重试');
-    } finally {
-      setSubmitting(false);
+      setError('创建失败');
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`确定删除标签「${name}」吗？`)) return;
+  const handleUpdate = async (id: string) => {
+    if (!editName.trim()) return;
+
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('admin_token='))
+      ?.split('=')[1];
+
     try {
-      await fetch(`/api/admin/tags/${id}`, { method: 'DELETE' });
-      setTags(tags.filter((t) => t.id !== id));
+      const res = await fetch(`/api/admin/tags/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+
+      if (res.ok) {
+        setEditingTag(null);
+        fetchTags();
+      }
     } catch {
-      alert('删除失败');
+      // ignore
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('确定删除此标签？关联的游戏标签也会被删除')) return;
+
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('admin_token='))
+      ?.split('=')[1];
+
+    try {
+      await fetch(`/api/admin/tags/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchTags();
+    } catch {
+      // ignore
     }
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground">标签管理</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">标签管理</h1>
+
+      {/* Create form */}
+      <form onSubmit={handleCreate} className="mb-6 flex gap-3">
+        <input
+          type="text"
+          value={newTagName}
+          onChange={(e) => setNewTagName(e.target.value)}
+          placeholder="输入新标签名"
+          className="flex-1 rounded-xl border border-border/50 bg-secondary/30 px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+        />
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          type="submit"
+          className="rounded-xl px-6 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 transition-colors"
         >
-          {showForm ? '取消' : '+ 添加标签'}
+          添加标签
         </button>
-      </div>
+      </form>
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-6 mb-6 space-y-4">
-          <div className="flex items-center gap-4 mb-2">
-            <h2 className="text-lg font-semibold text-foreground">添加标签</h2>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={batchMode}
-                onChange={(e) => setBatchMode(e.target.checked)}
-                className="rounded border-border"
-              />
-              批量模式
-            </label>
-          </div>
-
-          {batchMode ? (
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">标签名称（逗号或换行分隔）</label>
-              <textarea
-                value={batchNames}
-                onChange={(e) => setBatchNames(e.target.value)}
-                rows={3}
-                placeholder="动作, 冒险, RPG&#10;射击, 策略"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">标签名称 *</label>
-              <input
-                type="text"
-                value={tagName}
-                onChange={(e) => setTagName(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                required
-              />
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {submitting ? '添加中...' : '添加'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="rounded-lg bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/80 transition-colors"
-            >
-              取消
-            </button>
-          </div>
-        </form>
+      {error && (
+        <p className="mb-4 text-sm text-red-400">{error}</p>
       )}
 
+      {/* Tags list */}
       {loading ? (
-        <div className="text-muted-foreground">加载中...</div>
+        <div className="flex items-center justify-center py-10">
+          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+        </div>
       ) : (
-        <>
-          <div className="mb-4 text-sm text-muted-foreground">共 {tags.length} 个标签</div>
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <div
-                key={tag.id}
-                className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <span>{tag.name}</span>
-                <button
-                  onClick={() => handleDelete(tag.id, tag.name)}
-                  className="hidden group-hover:inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-destructive/20 hover:text-destructive transition-colors"
-                  title="删除标签"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </>
+        <div className="flex flex-wrap gap-3">
+          {tags.map(tag => (
+            <div key={tag.id} className="group relative">
+              {editingTag?.id === tag.id ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="rounded-lg border border-primary/50 bg-secondary/30 px-3 py-1.5 text-sm text-foreground focus:outline-none w-24"
+                    onKeyDown={(e) => e.key === 'Enter' && handleUpdate(tag.id)}
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleUpdate(tag.id)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    保存
+                  </button>
+                  <button
+                    onClick={() => setEditingTag(null)}
+                    className="text-xs text-muted-foreground hover:underline"
+                  >
+                    取消
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 rounded-xl border border-border/50 bg-card px-3 py-1.5">
+                  <span className="text-sm text-foreground">{tag.name}</span>
+                  <button
+                    onClick={() => { setEditingTag(tag); setEditName(tag.name); }}
+                    className="opacity-0 group-hover:opacity-100 text-xs text-muted-foreground hover:text-primary transition-all ml-1"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    onClick={() => handleDelete(tag.id)}
+                    className="opacity-0 group-hover:opacity-100 text-xs text-muted-foreground hover:text-red-400 transition-all"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+          {tags.length === 0 && (
+            <p className="text-muted-foreground text-sm">暂无标签</p>
+          )}
+        </div>
       )}
     </div>
   );

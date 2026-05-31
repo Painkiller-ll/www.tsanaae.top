@@ -5,6 +5,7 @@ import { Game, Comment } from '@/lib/types';
 import { getUserLevel } from '@/lib/types';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import ShareModal from '@/components/ShareModal';
 
 interface DownloadLink {
   label: string;
@@ -32,6 +33,7 @@ export default function GameDetailPage() {
   const [ratingCount, setRatingCount] = useState(0);
   const [commentSort, setCommentSort] = useState<'newest' | 'oldest'>('newest');
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [userPoints, setUserPoints] = useState(0);
 
@@ -458,6 +460,15 @@ export default function GameDetailPage() {
                 </svg>
                 {favorited ? '已收藏' : '收藏'}
               </button>
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm text-muted-foreground hover:border-primary/30 hover:text-primary transition-all"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                分享
+              </button>
             </div>
 
             {/* Download Section */}
@@ -635,6 +646,11 @@ export default function GameDetailPage() {
           </div>
         </section>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && game && (
+        <ShareModal game={game} onClose={() => setShowShareModal(false)} />
+      )}
     </div>
   );
 }

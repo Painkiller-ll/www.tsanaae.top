@@ -110,6 +110,12 @@ export default function Header() {
               商城
             </Link>
             <Link
+              href="/collections"
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+            >
+              合集
+            </Link>
+            <Link
               href="/leaderboard"
               className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
             >
