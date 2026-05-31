@@ -57,7 +57,7 @@ export default function CheckinCalendar({ onClose }: CheckinCalendarProps) {
   }
 
   return (
-    <div className="bg-[#1a1a24] rounded-xl p-5 border border-white/5">
+    <div className="bg-card rounded-xl p-5 border border-border/50">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-zinc-200">签到日历</h3>
         {onClose && (

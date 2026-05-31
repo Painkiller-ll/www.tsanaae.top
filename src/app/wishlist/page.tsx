@@ -87,7 +87,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f13]">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* 标题区 */}
@@ -106,7 +106,7 @@ export default function WishlistPage() {
 
         {/* 提交表单 */}
         {showForm && (
-          <div className="bg-[#1a1a24] rounded-xl p-6 mb-6 border border-white/5">
+          <div className="bg-card rounded-xl p-6 mb-6 border border-border/50">
             <h3 className="text-sm font-semibold text-zinc-200 mb-4">提交游戏心愿</h3>
             <div className="space-y-3">
               <input
@@ -114,14 +114,14 @@ export default function WishlistPage() {
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="游戏名称"
-                className="w-full px-4 py-2.5 bg-[#0f0f13] border border-white/10 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 transition-colors"
+                className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-purple-500 transition-colors"
               />
               <textarea
                 value={newDesc}
                 onChange={e => setNewDesc(e.target.value)}
                 placeholder="描述一下为什么想要这个游戏（选填）"
                 rows={3}
-                className="w-full px-4 py-2.5 bg-[#0f0f13] border border-white/10 rounded-lg text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-purple-500 transition-colors resize-none"
               />
               <button
                 onClick={handleSubmit}
@@ -149,7 +149,7 @@ export default function WishlistPage() {
               return (
                 <div
                   key={item.id}
-                  className="bg-[#1a1a24] rounded-xl p-5 border border-white/5 hover:border-white/10 transition-colors"
+                  className="bg-card rounded-xl p-5 border border-border/50 hover:border-border transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <button

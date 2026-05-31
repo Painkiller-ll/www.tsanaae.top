@@ -144,7 +144,7 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
         </div>
 
         {/* 分享链接预览 */}
-        <div className="mb-4 p-3 rounded-xl bg-[#0f0f13] border border-border/30">
+        <div className="mb-4 p-3 rounded-xl bg-secondary/50 border border-border/30">
           <p className="text-xs text-muted-foreground mb-1">分享链接</p>
           <p className="text-sm text-foreground/80 truncate font-mono">{gameUrl}</p>
         </div>
@@ -162,7 +162,7 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
               <p className="text-xs text-muted-foreground">直接复制游戏页面链接</p>
             </div>
             {copied === 'link' && (
-              <span className="text-xs text-green-400 font-medium">已复制!</span>
+              <span className="text-xs text-green-500 dark:text-green-400 font-medium">已复制!</span>
             )}
           </button>
 
@@ -177,7 +177,7 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
               <p className="text-xs text-muted-foreground">复制含推荐语的文字，粘贴到微信/QQ群</p>
             </div>
             {copied === 'text' && (
-              <span className="text-xs text-green-400 font-medium">已复制!</span>
+              <span className="text-xs text-green-500 dark:text-green-400 font-medium">已复制!</span>
             )}
           </button>
 
@@ -209,7 +209,7 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
         {/* 积分提示 */}
         {pointsMsg && (
           <div className="mb-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-center">
-            <p className="text-sm text-yellow-400">{pointsMsg}</p>
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">{pointsMsg}</p>
           </div>
         )}
 

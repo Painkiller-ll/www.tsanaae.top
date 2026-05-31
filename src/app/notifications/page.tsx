@@ -73,7 +73,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f13]">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -105,7 +105,7 @@ export default function NotificationsPage() {
             {notifications.map(n => (
               <div
                 key={n.id}
-                className={`bg-[#1a1a24] rounded-xl p-4 border border-white/5 transition-colors ${
+                className={`bg-card rounded-xl p-4 border border-border/50 transition-colors ${
                   !n.is_read ? 'border-l-2 border-l-purple-500' : ''
                 }`}
               >

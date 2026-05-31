@@ -30,10 +30,10 @@ export default function FloatingBall({ onOpenQrCode }: FloatingBallProps) {
             className="group flex items-center gap-2"
             title="回到顶部"
           >
-            <span className="rounded-lg bg-[#1a1a24] border border-[rgba(255,255,255,0.08)] px-3 py-1.5 text-xs text-[#e4e4e7] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            <span className="rounded-lg bg-card border border-border px-3 py-1.5 text-xs text-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               回到顶部
             </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1a1a24] border border-[rgba(255,255,255,0.08)] hover:border-[#7c3aed] transition-colors cursor-pointer shadow-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border hover:border-purple-500 transition-colors cursor-pointer shadow-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="18 15 12 9 6 15" />
               </svg>
@@ -47,10 +47,10 @@ export default function FloatingBall({ onOpenQrCode }: FloatingBallProps) {
             className="group flex items-center gap-2"
             title="每日签到"
           >
-            <span className="rounded-lg bg-[#1a1a24] border border-[rgba(255,255,255,0.08)] px-3 py-1.5 text-xs text-[#e4e4e7] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            <span className="rounded-lg bg-card border border-border px-3 py-1.5 text-xs text-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               每日签到
             </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1a1a24] border border-[rgba(255,255,255,0.08)] hover:border-[#7c3aed] transition-colors cursor-pointer shadow-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border hover:border-purple-500 transition-colors cursor-pointer shadow-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -70,10 +70,10 @@ export default function FloatingBall({ onOpenQrCode }: FloatingBallProps) {
               className="group flex items-center gap-2"
               title="微信联系"
             >
-              <span className="rounded-lg bg-[#1a1a24] border border-[rgba(255,255,255,0.08)] px-3 py-1.5 text-xs text-[#e4e4e7] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              <span className="rounded-lg bg-card border border-border px-3 py-1.5 text-xs text-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                 微信联系
               </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1a1a24] border border-[rgba(255,255,255,0.08)] hover:border-[#07c160] transition-colors cursor-pointer shadow-lg">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border hover:border-green-500 transition-colors cursor-pointer shadow-lg">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="#07c160">
                   <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05a6.42 6.42 0 0 1-.246-1.79c0-3.558 3.39-6.451 7.585-6.451.258 0 .507.022.76.042C16.706 4.882 13.075 2.188 8.691 2.188zm-2.87 4.401c.63 0 1.14.51 1.14 1.14s-.51 1.14-1.14 1.14-1.14-.51-1.14-1.14.51-1.14 1.14-1.14zm5.577 0c.63 0 1.14.51 1.14 1.14s-.51 1.14-1.14 1.14-1.14-.51-1.14-1.14.51-1.14 1.14-1.14zm3.398 3.24c-3.596 0-6.513 2.478-6.513 5.53s2.917 5.53 6.513 5.53c.708 0 1.39-.103 2.032-.29a.649.649 0 0 1 .544.075l1.445.846a.247.247 0 0 0 .126.041.223.223 0 0 0 .22-.224c0-.055-.022-.108-.036-.162l-.296-1.123a.447.447 0 0 1 .161-.504C20.68 17.826 21.637 16.17 21.637 14.359c0-3.052-2.917-5.53-6.513-5.53h.072zm-2.243 3.39c.48 0 .869.389.869.869s-.389.869-.869.869-.869-.389-.869-.869.389-.869.869-.869zm4.487 0c.48 0 .869.389.869.869s-.389.869-.869.869-.869-.389-.869-.869.389-.869.869-.869z" />
                 </svg>
