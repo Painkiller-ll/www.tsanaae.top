@@ -182,3 +182,18 @@ export interface WishlistItem {
   updated_at: string | null;
   has_voted?: boolean;
 }
+
+export interface MusicTrack {
+  id: string;
+  title: string;
+  artist: string | null;
+  cover_image: string | null;
+  file_key: string;
+  file_url?: string; // 动态生成的签名URL
+  duration: number;
+  sort_order: number;
+  is_active: boolean;
+  play_count: number;
+  created_at: string;
+  updated_at: string | null;
+}

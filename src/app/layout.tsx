@@ -3,6 +3,7 @@ import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import Footer from '@/components/Footer';
 import FloatingBall from '@/components/FloatingBall';
+import MusicPlayer from '@/components/MusicPlayer';
 import ThemeProvider from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
@@ -41,6 +42,7 @@ export default function RootLayout({
           <div className="flex-1">{children}</div>
           <Footer />
           <FloatingBall />
+          <MusicPlayer />
         </ThemeProvider>
       </body>
     </html>
