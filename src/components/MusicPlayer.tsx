@@ -138,37 +138,39 @@ export default function MusicPlayer() {
     return `${min}:${sec.toString().padStart(2, '0')}`;
   };
 
-  if (tracks.length === 0) return null;
+  const currentTrack = tracks.length > 0 ? tracks[currentIndex] : null;
 
-  const currentTrack = tracks[currentIndex];
+  // 迷你模式按钮
+  const miniButton = (
+    <button
+      onClick={() => {
+        if (tracks.length === 0) return;
+        setIsExpanded(true);
+      }}
+      className={`fixed bottom-20 right-6 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 group ${
+        tracks.length === 0
+          ? 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
+          : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/30 hover:scale-110'
+      }`}
+      title={tracks.length === 0 ? '暂无音乐' : '音乐播放器'}
+    >
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+      </svg>
+      {isMuted && tracks.length > 0 && (
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-muted-foreground rounded-full flex items-center justify-center">
+          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        </span>
+      )}
+    </button>
+  );
 
   return (
     <>
       {/* 迷你模式 - 右下角小图标 */}
-      {!isExpanded && (
-        <button
-          onClick={() => setIsExpanded(true)}
-          className="fixed bottom-20 right-6 z-50 w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/30 flex items-center justify-center transition-all duration-200 hover:scale-110 group"
-          title="音乐播放器"
-        >
-          {isPlaying && !isMuted ? (
-            <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-          )}
-          {isMuted && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-muted-foreground rounded-full flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-              </svg>
-            </span>
-          )}
-        </button>
-      )}
+      {!isExpanded && miniButton}
 
       {/* 展开模式 - 底部播放器 */}
       {isExpanded && (
