@@ -57,7 +57,7 @@ export default function AdminMusicPage() {
       if (newCover) formData.append('cover_image', newCover);
       formData.append('sort_order', String(tracks.length));
 
-      const res = await fetch('/api/music', { method: 'POST', body: formData });
+      const res = await fetch('/api/admin/music', { method: 'POST', body: formData });
       const data = await res.json();
 
       if (data.track) {
