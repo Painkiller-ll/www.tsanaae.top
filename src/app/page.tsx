@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import GameGrid from '@/components/GameGrid';
 import HotTags from '@/components/HotTags';
+import AnnouncementBar from '@/components/AnnouncementBar';
 
 interface UserInfo {
   id: string;
@@ -70,6 +71,8 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Header />
+
+      <AnnouncementBar />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}

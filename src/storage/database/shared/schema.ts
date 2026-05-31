@@ -7,6 +7,41 @@ export const healthCheck = pgTable("health_check", {
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 });
 
+// Game ratings
+export const gameRatings = pgTable(
+  "game_ratings",
+  {
+    id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+    user_id: varchar("user_id", { length: 36 }).notNull(),
+    game_id: varchar("game_id", { length: 36 }).notNull().references(() => games.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("game_ratings_user_id_idx").on(table.user_id),
+    index("game_ratings_game_id_idx").on(table.game_id),
+  ]
+);
+
+// Announcements
+export const announcements = pgTable(
+  "announcements",
+  {
+    id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+    title: varchar("title", { length: 200 }).notNull(),
+    content: text("content").notNull(),
+    type: varchar("type", { length: 20 }).default("info").notNull(),
+    is_active: boolean("is_active").default(true).notNull(),
+    start_date: timestamp("start_date", { withTimezone: true }),
+    end_date: timestamp("end_date", { withTimezone: true }),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp("updated_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("announcements_is_active_idx").on(table.is_active),
+  ]
+);
+
 // Game categories
 export const categories = pgTable(
   "categories",

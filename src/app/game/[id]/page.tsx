@@ -24,10 +24,21 @@ export default function GameDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [userToken, setUserToken] = useState<string>('');
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [avgRating, setAvgRating] = useState(0);
+  const [ratingCount, setRatingCount] = useState(0);
+  const [commentSort, setCommentSort] = useState<'newest' | 'oldest'>('newest');
 
   // Check login status
   useEffect(() => {
-    fetch('/api/user/auth/check').then(r => r.json()).then(d => setLoggedIn(!!d.user)).catch(() => {});
+    fetch('/api/user/auth/check').then(r => r.json()).then(d => {
+      setLoggedIn(!!d.user);
+      if (d.user) {
+        setUserToken(d.user.id || d.token || '');
+      }
+    }).catch(() => {});
   }, []);
 
   // Check favorite status
@@ -48,6 +59,15 @@ export default function GameDetailPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Fetch rating data
+    fetch(`/api/games/${id}/rate`)
+      .then(r => r.json())
+      .then(d => {
+        setAvgRating(d.avg_rating || 0);
+        setRatingCount(d.rating_count || 0);
+      })
+      .catch(() => {});
   }, [id]);
 
   const handleLike = async () => {
@@ -79,11 +99,30 @@ export default function GameDetailPage() {
   };
 
   const handleDownload = async (link: DownloadLink) => {
-    // Increment download count
     try {
       await fetch(`/api/games/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ increment_download: true }) });
     } catch { /* ignore */ }
     window.open(link.url, '_blank');
+  };
+
+  const handleRating = async (rating: number) => {
+    if (!loggedIn) {
+      window.location.href = '/login';
+      return;
+    }
+    try {
+      const res = await fetch(`/api/games/${id}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, user_token: userToken }),
+      });
+      const data = await res.json();
+      if (data.rating !== undefined) {
+        setUserRating(rating);
+        setAvgRating(data.avg_rating);
+        setRatingCount(data.rating_count);
+      }
+    } catch { /* ignore */ }
   };
 
   const handleComment = async (e: React.FormEvent) => {
@@ -105,9 +144,49 @@ export default function GameDetailPage() {
     finally { setSubmitting(false); }
   };
 
+  const sortedComments = useCallback(() => {
+    const sorted = [...comments];
+    if (commentSort === 'newest') {
+      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else {
+      sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+    return sorted;
+  }, [comments, commentSort]);
+
   // Parse download links and screenshots
   const downloadLinks: DownloadLink[] = game?.download_links ? (typeof game.download_links === 'string' ? JSON.parse(game.download_links) : game.download_links) : [];
   const screenshots: string[] = game?.screenshots ? (typeof game.screenshots === 'string' ? JSON.parse(game.screenshots) : game.screenshots) : [];
+
+  // Rating display helper
+  const renderStars = (rating: number, interactive: boolean = false) => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            disabled={!interactive}
+            onClick={() => interactive && handleRating(star)}
+            onMouseEnter={() => interactive && setHoverRating(star)}
+            onMouseLeave={() => interactive && setHoverRating(0)}
+            className={`${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform`}
+          >
+            <svg
+              width={interactive ? 24 : 16}
+              height={interactive ? 24 : 16}
+              viewBox="0 0 24 24"
+              fill={star <= (interactive ? (hoverRating || userRating) : rating) ? '#facc15' : 'none'}
+              stroke={star <= (interactive ? (hoverRating || userRating) : rating) ? '#facc15' : '#71717a'}
+              strokeWidth="2"
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -210,6 +289,40 @@ export default function GameDetailPage() {
                 {game.categories?.name || '游戏'}
               </span>
               <h1 className="text-2xl font-bold text-foreground">{game.title}</h1>
+            </div>
+
+            {/* Rating Section */}
+            <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-400">{avgRating > 0 ? avgRating.toFixed(1) : '-'}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{ratingCount} 人评分</div>
+                </div>
+                <div className="flex-1">
+                  {renderStars(Math.round(avgRating))}
+                  <div className="mt-2 space-y-1">
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count = star; // simplified, we show the bar but don't have per-star count
+                      return (
+                        <div key={star} className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground w-6">{star}星</span>
+                          <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-yellow-400"
+                              style={{ width: avgRating > 0 ? `${Math.max(5, (avgRating / 5) * 100 * (star / 5) * 1.5)}%` : '0%' }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              {/* User Rating */}
+              <div className="mt-3 pt-3 border-t border-border/50">
+                <p className="text-xs text-muted-foreground mb-2">{userRating > 0 ? '我的评分' : '点击评分'}</p>
+                {renderStars(userRating || 0, true)}
+              </div>
             </div>
 
             {/* Tags */}
@@ -316,7 +429,10 @@ export default function GameDetailPage() {
 
         {/* Description */}
         <section className="mb-10">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">📖 游戏详情</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+            游戏详情
+          </h2>
           <div className="rounded-xl border border-border/50 bg-card p-6">
             <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{game.description || '暂无详情'}</p>
           </div>
@@ -325,7 +441,10 @@ export default function GameDetailPage() {
         {/* System Requirements */}
         {(game.min_specs || game.rec_specs) && (
           <section className="mb-10">
-            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">⚙️ 系统配置</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+              系统配置
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {game.min_specs && (
                 <div className="rounded-xl border border-border/50 bg-card p-6">
@@ -359,29 +478,70 @@ export default function GameDetailPage() {
 
         {/* Comments */}
         <section className="mb-10">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            💬 评论区
-            <span className="text-sm text-muted-foreground font-normal">全部评论 ({comments.length})</span>
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+              评论区
+              <span className="text-sm text-muted-foreground font-normal">({comments.length})</span>
+            </h2>
+            <div className="flex items-center gap-1 text-xs">
+              <button
+                onClick={() => setCommentSort('newest')}
+                className={`px-2 py-1 rounded ${commentSort === 'newest' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                最新
+              </button>
+              <button
+                onClick={() => setCommentSort('oldest')}
+                className={`px-2 py-1 rounded ${commentSort === 'oldest' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                最早
+              </button>
+            </div>
+          </div>
+
+          {/* Comment Form */}
           <div className="rounded-xl border border-border/50 bg-card p-6 mb-6">
             <form onSubmit={handleComment} className="space-y-3">
-              <input type="text" placeholder="你的昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} className="w-full rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" required />
-              <textarea placeholder="写下你的评论..." value={content} onChange={(e) => setContent(e.target.value)} rows={3} className="w-full rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" required />
-              <button type="submit" disabled={submitting} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">{submitting ? '提交中...' : '发表评论'}</button>
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs text-primary font-bold shrink-0">
+                  {nickname ? nickname.charAt(0).toUpperCase() : '?'}
+                </div>
+                <div className="flex-1 space-y-3">
+                  <input type="text" placeholder="你的昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} className="w-full rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50" required />
+                  <textarea placeholder="写下你的评论..." value={content} onChange={(e) => setContent(e.target.value)} rows={3} className="w-full rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none" required />
+                  <div className="flex justify-end">
+                    <button type="submit" disabled={submitting} className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                      {submitting ? '提交中...' : '发表评论'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </form>
           </div>
-          <div className="space-y-4">
+
+          {/* Comment List */}
+          <div className="space-y-3">
             {comments.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">暂无评论，快来抢沙发吧</p>
+              <div className="text-center py-12">
+                <svg className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                <p className="text-muted-foreground">暂无评论，快来抢沙发吧</p>
+              </div>
             ) : (
-              comments.map((comment) => (
-                <div key={comment.id} className="rounded-xl border border-border/50 bg-card p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs text-primary font-bold">{comment.nickname.charAt(0).toUpperCase()}</div>
-                    <span className="text-sm font-medium text-foreground">{comment.nickname}</span>
-                    <span className="text-xs text-muted-foreground">{new Date(comment.created_at).toLocaleDateString('zh-CN')}</span>
+              sortedComments().map((comment) => (
+                <div key={comment.id} className="rounded-xl border border-border/50 bg-card p-4 hover:border-border transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs text-primary font-bold shrink-0 mt-0.5">
+                      {comment.nickname.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium text-foreground">{comment.nickname}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(comment.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <p className="text-sm text-foreground/80 leading-relaxed">{comment.content}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-foreground/80 pl-9">{comment.content}</p>
                 </div>
               ))
             )}

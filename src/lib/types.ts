@@ -44,6 +44,9 @@ export interface Game {
   comments?: Comment[];
   related_games?: Game[];
   is_favorited?: boolean;
+  avg_rating?: number;
+  rating_count?: number;
+  user_rating?: number;
 }
 
 export interface UserFavorite {
@@ -52,6 +55,26 @@ export interface UserFavorite {
   game_id: string;
   created_at: string;
   game?: Game;
+}
+
+export interface GameRating {
+  id: string;
+  user_id: string;
+  game_id: string;
+  rating: number; // 1-5
+  created_at: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  is_active: boolean;
+  start_date?: string;
+  end_date?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface Comment {
