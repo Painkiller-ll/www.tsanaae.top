@@ -6,6 +6,14 @@ import Header from '@/components/Header';
 import GameGrid from '@/components/GameGrid';
 import HotTags from '@/components/HotTags';
 
+interface UserInfo {
+  id: string;
+  email: string;
+  nickname: string;
+  points: number;
+  avatar_url: string;
+}
+
 interface SiteSettings {
   site_name: string;
   site_description: string;
@@ -19,6 +27,7 @@ interface SiteSettings {
 
 export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [user, setUser] = useState<UserInfo | null>(null);
 
   useEffect(() => {
     fetch('/api/site-settings')
@@ -40,6 +49,15 @@ export default function Home() {
             document.body.style.backgroundSize = 'cover';
             document.body.style.backgroundAttachment = 'fixed';
           }
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/user/auth/check')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.authenticated && data?.user) {
+          setUser(data.user);
         }
       })
       .catch(() => {});
@@ -113,6 +131,65 @@ export default function Home() {
             </Link>
           </div>
         </section>
+
+        {/* User Actions Banner - 未登录时显示 */}
+        {!user && (
+          <section className="mb-10">
+            <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-1">加入 Tsanaae Game 社区</h3>
+                <p className="text-sm text-muted-foreground">注册账号即可每日签到赚积分，解锁更多游戏资源</p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href="/register"
+                  className="rounded-xl px-6 py-2.5 text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors"
+                >
+                  免费注册
+                </Link>
+                <Link
+                  href="/login"
+                  className="rounded-xl px-6 py-2.5 text-sm font-medium text-foreground border border-border hover:bg-secondary/50 transition-colors"
+                >
+                  已有账号？登录
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Logged-in User Quick Actions - 登录后显示 */}
+        {user && (
+          <section className="mb-10">
+            <div className="rounded-2xl border border-border/50 bg-card p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-primary text-lg font-bold">
+                    {user.nickname.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{user.nickname}</p>
+                    <p className="text-sm text-yellow-500">积分: {user.points}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/profile"
+                    className="rounded-xl px-5 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 transition-colors"
+                  >
+                    每日签到
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="rounded-xl px-5 py-2 text-sm font-medium text-foreground border border-border hover:bg-secondary/50 transition-colors"
+                  >
+                    个人中心
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Latest Games */}
         <section>
