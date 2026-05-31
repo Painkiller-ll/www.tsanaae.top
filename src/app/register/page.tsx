@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [nickname, setNickname] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +34,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/user/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, nickname }),
+        body: JSON.stringify({ email, password, nickname, invite_code: inviteCode || undefined }),
       });
       const data = await res.json();
 
@@ -117,6 +118,17 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="再次输入密码"
               required
+              className="w-full px-4 py-2.5 bg-[#0f0f13] border border-white/[0.08] rounded-lg text-white placeholder-[#71717a] focus:outline-none focus:border-[#7c3aed] transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-[#e4e4e7] mb-1.5">邀请码 <span className="text-[#71717a]">(选填)</span></label>
+            <input
+              type="text"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              placeholder="好友的邀请码，双方各得50积分"
               className="w-full px-4 py-2.5 bg-[#0f0f13] border border-white/[0.08] rounded-lg text-white placeholder-[#71717a] focus:outline-none focus:border-[#7c3aed] transition-colors"
             />
           </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getUserLevel, USER_LEVELS } from '@/lib/types';
 
 interface UserInfo {
   id: string;
@@ -27,6 +28,16 @@ interface PointTransaction {
   created_at: string;
 }
 
+interface PointTask {
+  id: string;
+  name: string;
+  points: number;
+  max: number;
+  completed: number;
+  remaining: number;
+  icon: string;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -37,13 +48,20 @@ export default function ProfilePage() {
   const [checkInResult, setCheckInResult] = useState<{ points_earned: number; consecutive_days: number } | null>(null);
   const [editingNickname, setEditingNickname] = useState(false);
   const [nickname, setNickname] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [inviteCount, setInviteCount] = useState(0);
+  const [inviteInput, setInviteInput] = useState('');
+  const [inviteMsg, setInviteMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [tasks, setTasks] = useState<PointTask[]>([]);
 
   const fetchUserData = useCallback(async () => {
     try {
-      const [authRes, checkInRes, pointsRes] = await Promise.all([
+      const [authRes, checkInRes, pointsRes, inviteRes, tasksRes] = await Promise.all([
         fetch('/api/user/auth/check'),
         fetch('/api/user/checkin'),
         fetch('/api/user/points'),
+        fetch('/api/user/invite'),
+        fetch('/api/user/tasks'),
       ]);
 
       const authData = await authRes.json();
@@ -61,6 +79,17 @@ export default function ProfilePage() {
       if (pointsRes.ok) {
         const pointsData = await pointsRes.json();
         setTransactions(pointsData.transactions || []);
+      }
+
+      if (inviteRes.ok) {
+        const inviteData = await inviteRes.json();
+        setInviteCode(inviteData.invite_code || '');
+        setInviteCount(inviteData.invite_count || 0);
+      }
+
+      if (tasksRes.ok) {
+        const tasksData = await tasksRes.json();
+        setTasks(tasksData.tasks || []);
       }
     } catch {
       // ignore
@@ -147,7 +176,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* User Info Card */}
+        {/* User Info Card with Level */}
         <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 rounded-full bg-[#7c3aed]/20 flex items-center justify-center text-2xl font-bold text-[#7c3aed]">
@@ -172,12 +201,55 @@ export default function ProfilePage() {
                 </div>
               )}
               <p className="text-sm text-[#71717a]">{user.email}</p>
-              <div className="flex items-center gap-4 mt-1">
+              <div className="flex items-center gap-3 mt-1">
                 <span className="text-sm text-[#a855f7] font-medium">{user.points} 积分</span>
                 {user.role === 'admin' && <span className="text-xs bg-[#7c3aed]/20 text-[#7c3aed] px-2 py-0.5 rounded">管理员</span>}
+                <span className={`text-xs px-2 py-0.5 rounded ${getUserLevel(user.points).bgColor} ${getUserLevel(user.points).textColor}`}>
+                  Lv.{getUserLevel(user.points).level} {getUserLevel(user.points).name}
+                </span>
               </div>
             </div>
             <button onClick={handleLogout} className="px-4 py-2 bg-white/[0.05] text-[#71717a] rounded-lg hover:bg-white/[0.1] text-sm">退出登录</button>
+          </div>
+          {/* Level Progress Bar */}
+          <div className="mt-4 pt-4 border-t border-white/[0.05]">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-[#71717a]">{getUserLevel(user.points).name}</span>
+              <span className="text-xs text-[#71717a]">
+                {user.points} / {getUserLevel(user.points).nextLevelPoints} 升级
+              </span>
+            </div>
+            <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, (user.points / getUserLevel(user.points).nextLevelPoints) * 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Level Privileges Card */}
+        <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6">
+          <h3 className="text-lg font-bold text-white mb-4">等级特权</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {USER_LEVELS.map((lv) => (
+              <div
+                key={lv.level}
+                className={`rounded-lg border p-3 text-center transition-all ${
+                  getUserLevel(user.points).level >= lv.level
+                    ? 'border-[#7c3aed]/30 bg-[#7c3aed]/10'
+                    : 'border-white/[0.05] bg-white/[0.02] opacity-50'
+                }`}
+              >
+                <div className={`text-lg font-bold ${getUserLevel(user.points).level >= lv.level ? 'text-[#a855f7]' : 'text-[#71717a]'}`}>
+                  Lv.{lv.level}
+                </div>
+                <div className={`text-xs ${getUserLevel(user.points).level >= lv.level ? 'text-[#e4e4e7]' : 'text-[#71717a]'}`}>
+                  {lv.name}
+                </div>
+                <div className="text-xs text-[#71717a] mt-1">{lv.minPoints}分</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -208,12 +280,128 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Point Tasks Card */}
+        <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6">
+          <h3 className="text-lg font-bold text-white mb-4">积分任务</h3>
+          <div className="space-y-3">
+            {tasks.map((task) => (
+              <div key={task.id} className="flex items-center justify-between py-2 border-b border-white/[0.05] last:border-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{task.icon}</span>
+                  <div>
+                    <p className="text-sm text-[#e4e4e7]">{task.name}</p>
+                    <p className="text-xs text-[#71717a]">
+                      {task.remaining > 0
+                        ? `今日剩余 ${task.remaining}/${task.max} 次`
+                        : '今日已完成'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-[#a855f7]">+{task.points}</span>
+                  {task.remaining > 0 ? (
+                    <Link
+                      href="/"
+                      className="px-3 py-1 bg-[#7c3aed]/10 text-[#a855f7] text-xs rounded-lg hover:bg-[#7c3aed]/20 transition-colors"
+                    >
+                      去完成
+                    </Link>
+                  ) : (
+                    <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs rounded-lg">已完成</span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {tasks.length === 0 && (
+              <p className="text-[#71717a] text-sm">暂无积分任务</p>
+            )}
+          </div>
+        </div>
+
+        {/* Invite Card */}
+        <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6">
+          <h3 className="text-lg font-bold text-white mb-4">邀请好友</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-[#e4e4e7] mb-1">我的邀请码</p>
+                <div className="flex items-center gap-2">
+                  <code className="px-4 py-2 bg-[#0f0f13] rounded-lg text-[#a855f7] font-mono text-lg tracking-wider">
+                    {inviteCode || '加载中...'}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(inviteCode);
+                      setInviteMsg({ type: 'success', text: '邀请码已复制' });
+                      setTimeout(() => setInviteMsg(null), 2000);
+                    }}
+                    className="px-3 py-2 bg-[#7c3aed]/10 text-[#a855f7] text-sm rounded-lg hover:bg-[#7c3aed]/20 transition-colors"
+                  >
+                    复制
+                  </button>
+                </div>
+              </div>
+              <div className="text-center px-6 border-l border-white/[0.05]">
+                <p className="text-2xl font-bold text-[#a855f7]">{inviteCount}</p>
+                <p className="text-xs text-[#71717a]">已邀请</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={inviteInput}
+                onChange={(e) => setInviteInput(e.target.value.toUpperCase())}
+                placeholder="输入好友的邀请码"
+                className="flex-1 px-3 py-2 bg-[#0f0f13] border border-white/[0.08] rounded-lg text-white text-sm focus:outline-none focus:border-[#7c3aed] placeholder:text-[#71717a]"
+              />
+              <button
+                onClick={async () => {
+                  if (!inviteInput.trim()) return;
+                  try {
+                    const res = await fetch('/api/user/invite', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ code: inviteInput.trim() }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setInviteMsg({ type: 'success', text: `兑换成功！获得 ${data.points_awarded || 30} 积分` });
+                      setInviteInput('');
+                      fetchUserData();
+                    } else {
+                      setInviteMsg({ type: 'error', text: data.error || '兑换失败' });
+                    }
+                  } catch {
+                    setInviteMsg({ type: 'error', text: '网络错误' });
+                  }
+                  setTimeout(() => setInviteMsg(null), 3000);
+                }}
+                className="px-4 py-2 bg-[#7c3aed] text-white text-sm rounded-lg hover:bg-[#6d28d9] transition-colors"
+              >
+                兑换
+              </button>
+            </div>
+            {inviteMsg && (
+              <p className={`text-sm ${inviteMsg.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                {inviteMsg.text}
+              </p>
+            )}
+            <p className="text-xs text-[#71717a]">分享你的邀请码给好友，好友注册后双方各获得 50 积分奖励！</p>
+          </div>
+        </div>
+
         {/* Quick Links */}
         <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6">
           <h3 className="text-lg font-bold text-white mb-4">快捷入口</h3>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Link href="/favorites" className="px-4 py-2.5 bg-[#7c3aed]/10 text-[#a855f7] rounded-lg hover:bg-[#7c3aed]/20 text-sm font-medium transition-colors">
               我的收藏
+            </Link>
+            <Link href="/shop" className="px-4 py-2.5 bg-[#7c3aed]/10 text-[#a855f7] rounded-lg hover:bg-[#7c3aed]/20 text-sm font-medium transition-colors">
+              积分商城
+            </Link>
+            <Link href="/leaderboard" className="px-4 py-2.5 bg-[#7c3aed]/10 text-[#a855f7] rounded-lg hover:bg-[#7c3aed]/20 text-sm font-medium transition-colors">
+              排行榜
             </Link>
             <Link href="/" className="px-4 py-2.5 bg-white/[0.05] text-[#e4e4e7] rounded-lg hover:bg-white/[0.1] text-sm font-medium transition-colors">
               浏览游戏

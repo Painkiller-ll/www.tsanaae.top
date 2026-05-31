@@ -108,6 +108,41 @@ export async function POST(
 
     if (gameUpdateError) throw new Error(`Failed to update game rating: ${gameUpdateError.message}`);
 
+    // Award points for first-time rating (1 point, max 3 per day)
+    if (!existingRating) {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: todayRatings } = await client
+          .from('point_transactions')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('reason', '评分奖励')
+          .gte('created_at', today)
+          .limit(3);
+
+        if (todayRatings && todayRatings.length < 3) {
+          const { data: userPointData } = await client
+            .from('users')
+            .select('points')
+            .eq('id', userId)
+            .single();
+
+          if (userPointData) {
+            const newPoints = (userPointData.points || 0) + 1;
+            await client.from('users').update({ points: newPoints }).eq('id', userId);
+            await client.from('point_transactions').insert({
+              user_id: userId,
+              amount: 1,
+              balance_after: newPoints,
+              reason: '评分奖励',
+            });
+          }
+        }
+      } catch {
+        // Points award is optional
+      }
+    }
+
     return NextResponse.json({
       rating,
       avg_rating: Math.round(avgRating * 10) / 10,

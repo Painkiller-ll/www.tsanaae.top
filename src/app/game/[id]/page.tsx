@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Game, Comment } from '@/lib/types';
+import { getUserLevel } from '@/lib/types';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -30,6 +31,9 @@ export default function GameDetailPage() {
   const [avgRating, setAvgRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
   const [commentSort, setCommentSort] = useState<'newest' | 'oldest'>('newest');
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
+  const [userPoints, setUserPoints] = useState(0);
 
   // Check login status
   useEffect(() => {
@@ -37,6 +41,7 @@ export default function GameDetailPage() {
       setLoggedIn(!!d.user);
       if (d.user) {
         setUserToken(d.user.id || d.token || '');
+        setUserPoints(d.user.points || 0);
       }
     }).catch(() => {});
   }, []);
@@ -68,6 +73,14 @@ export default function GameDetailPage() {
         setRatingCount(d.rating_count || 0);
       })
       .catch(() => {});
+
+    // Check unlock status
+    fetch(`/api/user/unlock?game_id=${id}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.unlocked) setIsUnlocked(true);
+      })
+      .catch(() => {});
   }, [id]);
 
   const handleLike = async () => {
@@ -95,6 +108,9 @@ export default function GameDetailPage() {
       });
       const data = await res.json();
       setFavorited(data.favorited);
+      if (data.favorited) {
+        await awardPoints('favorite');
+      }
     } catch { /* ignore */ }
   };
 
@@ -121,7 +137,52 @@ export default function GameDetailPage() {
         setUserRating(rating);
         setAvgRating(data.avg_rating);
         setRatingCount(data.rating_count);
+        // Award points for rating
+        await fetch('/api/user/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'rate', reference_id: id }),
+        }).catch(() => {});
       }
+    } catch { /* ignore */ }
+  };
+
+  const handleUnlock = async () => {
+    if (!loggedIn) {
+      window.location.href = '/login';
+      return;
+    }
+    if (!game?.unlock_points) return;
+    setUnlocking(true);
+    try {
+      const res = await fetch('/api/user/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game_id: id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsUnlocked(true);
+        setUserPoints(prev => prev - (game.unlock_points || 0));
+      } else if (data.already_unlocked) {
+        setIsUnlocked(true);
+      } else {
+        alert(data.error || '解锁失败');
+      }
+    } catch {
+      alert('网络错误');
+    } finally {
+      setUnlocking(false);
+    }
+  };
+
+  const awardPoints = async (action: string) => {
+    try {
+      await fetch('/api/user/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, reference_id: id }),
+      });
     } catch { /* ignore */ }
   };
 
@@ -139,6 +200,8 @@ export default function GameDetailPage() {
       if (data.comment) {
         setComments([data.comment, ...comments]);
         setContent('');
+        // Award points for commenting
+        await awardPoints('comment');
       }
     } catch { /* ignore */ }
     finally { setSubmitting(false); }
@@ -401,27 +464,51 @@ export default function GameDetailPage() {
             {downloadLinks.length > 0 && (
               <div className="space-y-2 pt-2">
                 <h3 className="text-sm font-semibold text-foreground">下载资源</h3>
-                {downloadLinks.map((link, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleDownload(link)}
-                    className="w-full flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 px-4 py-3 text-sm transition-colors group"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
-                      {link.type === 'pan' ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                      ) : link.type === 'magnet' ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2v6a6 6 0 0 0 12 0V2" /><line x1="6" y1="6" x2="10" y2="6" /><line x1="14" y1="6" x2="18" y2="6" /></svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
-                      )}
+                {game.unlock_points && game.unlock_points > 0 && !isUnlocked ? (
+                  <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#facc15" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                      <span className="text-sm font-medium text-yellow-400">付费资源</span>
                     </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-foreground font-medium">{link.label}</div>
-                    </div>
-                    <svg className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
-                  </button>
-                ))}
+                    <p className="text-xs text-muted-foreground mb-3">
+                      此游戏资源需要 <span className="text-yellow-400 font-bold">{game.unlock_points}</span> 积分解锁
+                      {loggedIn && <span>（当前积分: <span className="text-yellow-400">{userPoints}</span>）</span>}
+                    </p>
+                    <button
+                      onClick={handleUnlock}
+                      disabled={unlocking || (loggedIn && userPoints < (game.unlock_points || 0))}
+                      className={`w-full rounded-lg py-2.5 text-sm font-medium transition-colors ${
+                        loggedIn && userPoints >= (game.unlock_points || 0)
+                          ? 'bg-yellow-500 text-black hover:bg-yellow-400'
+                          : 'bg-secondary text-muted-foreground cursor-not-allowed'
+                      }`}
+                    >
+                      {unlocking ? '解锁中...' : loggedIn ? (userPoints < (game.unlock_points || 0) ? '积分不足' : `${game.unlock_points} 积分解锁`) : '登录后解锁'}
+                    </button>
+                  </div>
+                ) : (
+                  downloadLinks.map((link, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleDownload(link)}
+                      className="w-full flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 px-4 py-3 text-sm transition-colors group"
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
+                        {link.type === 'pan' ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                        ) : link.type === 'magnet' ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2v6a6 6 0 0 0 12 0V2" /><line x1="6" y1="6" x2="10" y2="6" /><line x1="14" y1="6" x2="18" y2="6" /></svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+                        )}
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="text-foreground font-medium">{link.label}</div>
+                      </div>
+                      <svg className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>

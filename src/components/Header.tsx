@@ -103,6 +103,18 @@ export default function Header() {
             >
               手机游戏
             </Link>
+            <Link
+              href="/shop"
+              className="rounded-lg px-3 py-2 text-sm text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors"
+            >
+              商城
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+            >
+              排行
+            </Link>
 
             {user ? (
               <div className="relative ml-2">
@@ -146,6 +158,20 @@ export default function Header() {
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                         我的收藏
+                      </Link>
+                      <Link
+                        href="/shop"
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-secondary/50 transition-colors"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        积分商城
+                      </Link>
+                      <Link
+                        href="/leaderboard"
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-secondary/50 transition-colors"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                        积分排行
                       </Link>
                       <button
                         onClick={handleLogout}

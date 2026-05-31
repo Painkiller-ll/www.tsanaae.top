@@ -37,6 +37,7 @@ export default function NewGamePage() {
     download_links: [] as { label: string; url: string; type: string }[],
     screenshots: [] as string[],
     is_featured: false,
+    unlock_points: 0,
     min_specs: '' as string,
     rec_specs: '' as string,
   });
@@ -121,6 +122,11 @@ export default function NewGamePage() {
       }
       if (!form.release_date) {
         delete body.release_date;
+      }
+      if (form.unlock_points && form.unlock_points > 0) {
+        body.unlock_points = form.unlock_points;
+      } else {
+        delete body.unlock_points;
       }
       if (!form.description) {
         delete body.description;
@@ -451,6 +457,22 @@ export default function NewGamePage() {
           >
             + 添加截图
           </button>
+        </div>
+
+        {/* Unlock Points */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            解锁所需积分 <span className="text-muted-foreground">(0=免费)</span>
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={form.unlock_points}
+            onChange={(e) => setForm({ ...form, unlock_points: parseInt(e.target.value) || 0 })}
+            placeholder="0"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <p className="text-xs text-muted-foreground mt-1">设置大于0时，用户需消耗积分才能查看下载链接</p>
         </div>
 
         <div className="flex items-center gap-4">

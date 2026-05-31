@@ -15,6 +15,7 @@ const navItems = [
   { href: '/admin/tags', label: '标签管理', icon: '🏷️' },
   { href: '/admin/comments', label: '评论管理', icon: '💬' },
   { href: '/admin/announcements', label: '公告管理', icon: '📢' },
+  { href: '/admin/shop', label: '商城管理', icon: '🛒' },
   { href: '/admin/settings', label: '站点设置', icon: '⚙️' },
 ];
 

@@ -31,6 +31,7 @@ interface GameData {
   download_links?: DownloadLink[];
   screenshots?: string[];
   is_featured: boolean;
+  unlock_points: number;
   min_specs?: Record<string, string>;
   rec_specs?: Record<string, string>;
   tags?: { id: string; name: string }[];
@@ -61,6 +62,7 @@ export default function EditGamePage() {
     video_url: '',
     download_url: '',
     is_featured: false,
+    unlock_points: 0,
     min_specs: '' as string,
     rec_specs: '' as string,
     download_links: [] as DownloadLink[],
@@ -100,6 +102,7 @@ export default function EditGamePage() {
             video_url: g.video_url || '',
             download_url: g.download_url || '',
             is_featured: g.is_featured || false,
+            unlock_points: g.unlock_points || 0,
             min_specs: g.min_specs ? JSON.stringify(g.min_specs, null, 2) : '',
             rec_specs: g.rec_specs ? JSON.stringify(g.rec_specs, null, 2) : '',
             download_links: g.download_links || [],
@@ -305,6 +308,20 @@ export default function EditGamePage() {
                 />
                 <span className="text-sm text-foreground">设为精选</span>
               </label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                解锁所需积分 <span className="text-muted-foreground">(0=免费)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.unlock_points}
+                onChange={(e) => setForm({ ...form, unlock_points: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <p className="text-xs text-muted-foreground mt-1">设置大于0时，用户需消耗积分才能查看下载链接</p>
             </div>
           </div>
         </div>
