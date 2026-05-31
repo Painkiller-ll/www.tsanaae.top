@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import type { DownloadLink } from '@/lib/types';
 
 interface Category {
   id: string;
@@ -27,6 +28,8 @@ interface GameData {
   platform: string;
   video_url?: string;
   download_url?: string;
+  download_links?: DownloadLink[];
+  screenshots?: string[];
   is_featured: boolean;
   min_specs?: Record<string, string>;
   rec_specs?: Record<string, string>;
@@ -60,6 +63,8 @@ export default function EditGamePage() {
     is_featured: false,
     min_specs: '' as string,
     rec_specs: '' as string,
+    download_links: [] as DownloadLink[],
+    screenshots: [] as string[],
   });
 
   useEffect(() => {
@@ -97,6 +102,8 @@ export default function EditGamePage() {
             is_featured: g.is_featured || false,
             min_specs: g.min_specs ? JSON.stringify(g.min_specs, null, 2) : '',
             rec_specs: g.rec_specs ? JSON.stringify(g.rec_specs, null, 2) : '',
+            download_links: g.download_links || [],
+            screenshots: g.screenshots || [],
           });
           setSelectedTags(g.tags?.map((t) => t.id) || []);
         }
@@ -303,22 +310,111 @@ export default function EditGamePage() {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">链接</h2>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">下载链接</label>
-            <input
-              type="text"
-              value={form.download_url}
-              onChange={(e) => setForm({ ...form, download_url: e.target.value })}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
+          <h2 className="text-lg font-semibold text-foreground">下载链接</h2>
+          {form.download_links.map((link: DownloadLink, idx: number) => (
+            <div key={idx} className="flex gap-2 items-start">
+              <input
+                type="text"
+                value={link.label}
+                onChange={(e) => {
+                  const newLinks = [...form.download_links!];
+                  newLinks[idx] = { ...newLinks[idx], label: e.target.value };
+                  setForm({ ...form, download_links: newLinks });
+                }}
+                placeholder="名称（如：百度网盘）"
+                className="w-1/4 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <select
+                value={link.type}
+                onChange={(e) => {
+                  const newLinks = [...form.download_links!];
+                  newLinks[idx] = { ...newLinks[idx], type: e.target.value };
+                  setForm({ ...form, download_links: newLinks });
+                }}
+                className="w-1/4 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <option value="pan">网盘</option>
+                <option value="magnet">磁力链</option>
+                <option value="direct">直链</option>
+                <option value="other">其他</option>
+              </select>
+              <input
+                type="text"
+                value={link.url}
+                onChange={(e) => {
+                  const newLinks = [...form.download_links!];
+                  newLinks[idx] = { ...newLinks[idx], url: e.target.value };
+                  setForm({ ...form, download_links: newLinks });
+                }}
+                placeholder="下载地址"
+                className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newLinks = form.download_links!.filter((_: DownloadLink, i: number) => i !== idx);
+                  setForm({ ...form, download_links: newLinks });
+                }}
+                className="px-2 py-2 text-red-400 hover:text-red-300 text-sm"
+              >✕</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setForm({ ...form, download_links: [...(form.download_links || []), { label: '', url: '', type: 'pan' }] })}
+            className="text-sm text-primary hover:text-primary/80 transition-colors"
+          >+ 添加下载链接</button>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">游戏截图</h2>
+          {form.screenshots.map((url: string, idx: number) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => {
+                  const newShots = [...form.screenshots];
+                  newShots[idx] = e.target.value;
+                  setForm({ ...form, screenshots: newShots });
+                }}
+                placeholder="截图 URL"
+                className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newShots = form.screenshots.filter((_: string, i: number) => i !== idx);
+                  setForm({ ...form, screenshots: newShots });
+                }}
+                className="px-2 py-2 text-red-400 hover:text-red-300 text-sm"
+              >✕</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setForm({ ...form, screenshots: [...form.screenshots, ''] })}
+            className="text-sm text-primary hover:text-primary/80 transition-colors"
+          >+ 添加截图</button>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">其他链接</h2>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">视频 URL</label>
             <input
               type="text"
               value={form.video_url}
               onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">旧下载链接（兼容）</label>
+            <input
+              type="text"
+              value={form.download_url}
+              onChange={(e) => setForm({ ...form, download_url: e.target.value })}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>

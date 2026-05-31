@@ -34,6 +34,8 @@ export default function NewGamePage() {
     platform: 'pc',
     video_url: '',
     download_url: '',
+    download_links: [] as { label: string; url: string; type: string }[],
+    screenshots: [] as string[],
     is_featured: false,
     min_specs: '' as string,
     rec_specs: '' as string,
@@ -100,6 +102,16 @@ export default function NewGamePage() {
       }
       if (!form.download_url) {
         delete body.download_url;
+      }
+      if (form.download_links && form.download_links.length > 0) {
+        body.download_links = form.download_links.filter((l: { label: string; url: string }) => l.url);
+      } else {
+        delete body.download_links;
+      }
+      if (form.screenshots && form.screenshots.length > 0) {
+        body.screenshots = form.screenshots.filter((s: string) => s);
+      } else {
+        delete body.screenshots;
       }
       if (!form.developer) {
         delete body.developer;
@@ -338,6 +350,107 @@ export default function NewGamePage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">下载链接（多个）</h2>
+          {form.download_links.map((link, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={link.label}
+                onChange={(e) => {
+                  const links = [...form.download_links];
+                  links[idx] = { ...links[idx], label: e.target.value };
+                  setForm({ ...form, download_links: links });
+                }}
+                placeholder="名称（如：百度网盘）"
+                className="w-1/4 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <input
+                type="text"
+                value={link.url}
+                onChange={(e) => {
+                  const links = [...form.download_links];
+                  links[idx] = { ...links[idx], url: e.target.value };
+                  setForm({ ...form, download_links: links });
+                }}
+                placeholder="https://..."
+                className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <select
+                value={link.type}
+                onChange={(e) => {
+                  const links = [...form.download_links];
+                  links[idx] = { ...links[idx], type: e.target.value };
+                  setForm({ ...form, download_links: links });
+                }}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <option value="netdisk">网盘</option>
+                <option value="magnet">磁力链接</option>
+                <option value="torrent">种子</option>
+                <option value="direct">直链</option>
+                <option value="other">其他</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  const links = form.download_links.filter((_, i) => i !== idx);
+                  setForm({ ...form, download_links: links });
+                }}
+                className="text-red-400 hover:text-red-300 text-sm px-2"
+              >
+                删除
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setForm({ ...form, download_links: [...form.download_links, { label: '', url: '', type: 'netdisk' }] })}
+            className="text-sm text-primary hover:underline"
+          >
+            + 添加下载链接
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">游戏截图</h2>
+          {form.screenshots.map((url, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => {
+                  const shots = [...form.screenshots];
+                  shots[idx] = e.target.value;
+                  setForm({ ...form, screenshots: shots });
+                }}
+                placeholder="截图URL"
+                className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              {url && (
+                <img src={url} alt="" className="w-16 h-10 object-cover rounded border border-border" />
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  const shots = form.screenshots.filter((_, i) => i !== idx);
+                  setForm({ ...form, screenshots: shots });
+                }}
+                className="text-red-400 hover:text-red-300 text-sm px-2"
+              >
+                删除
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setForm({ ...form, screenshots: [...form.screenshots, ''] })}
+            className="text-sm text-primary hover:underline"
+          >
+            + 添加截图
+          </button>
         </div>
 
         <div className="flex items-center gap-4">

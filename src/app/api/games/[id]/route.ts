@@ -62,3 +62,26 @@ export async function GET(
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+// PATCH - increment download count
+export async function PATCH(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const client = getSupabaseClient();
+
+    const { error } = await client.rpc('increment_download_count', { game_id: id });
+    if (error) {
+      // Fallback: manual increment if RPC not available
+      const { data: game } = await client.from('games').select('download_count').eq('id', id).maybeSingle();
+      const newCount = (game?.download_count || 0) + 1;
+      await client.from('games').update({ download_count: newCount }).eq('id', id);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ success: true });
+  }
+}

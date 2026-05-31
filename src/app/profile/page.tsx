@@ -208,6 +208,19 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Quick Links */}
+        <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6">
+          <h3 className="text-lg font-bold text-white mb-4">快捷入口</h3>
+          <div className="flex gap-3">
+            <Link href="/favorites" className="px-4 py-2.5 bg-[#7c3aed]/10 text-[#a855f7] rounded-lg hover:bg-[#7c3aed]/20 text-sm font-medium transition-colors">
+              我的收藏
+            </Link>
+            <Link href="/" className="px-4 py-2.5 bg-white/[0.05] text-[#e4e4e7] rounded-lg hover:bg-white/[0.1] text-sm font-medium transition-colors">
+              浏览游戏
+            </Link>
+          </div>
+        </div>
+
         {/* Points History */}
         <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6">
           <h3 className="text-lg font-bold text-white mb-4">积分记录</h3>

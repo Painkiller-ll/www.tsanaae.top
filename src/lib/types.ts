@@ -11,6 +11,12 @@ export interface GameCategory {
   icon?: string;
 }
 
+export interface DownloadLink {
+  label: string;
+  url: string;
+  type?: string;
+}
+
 export interface Game {
   id: string;
   title: string;
@@ -29,12 +35,23 @@ export interface Game {
   likes: number;
   is_featured: boolean;
   download_url?: string;
+  download_links?: DownloadLink[];
+  download_count: number;
   created_at: string;
   updated_at?: string;
   tags?: GameTag[];
   categories?: GameCategory;
   comments?: Comment[];
   related_games?: Game[];
+  is_favorited?: boolean;
+}
+
+export interface UserFavorite {
+  id: string;
+  user_id: string;
+  game_id: string;
+  created_at: string;
+  game?: Game;
 }
 
 export interface Comment {

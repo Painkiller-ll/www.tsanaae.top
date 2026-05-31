@@ -12,6 +12,8 @@ interface Settings {
   site_logo_url: string;
   site_bg_image: string;
   site_footer_text: string;
+  wechat_qr_code: string;
+  footer_links: { label: string; url: string }[];
 }
 
 export default function AdminSettingsPage() {
@@ -25,6 +27,8 @@ export default function AdminSettingsPage() {
     site_logo_url: '',
     site_bg_image: '',
     site_footer_text: '© 2025 Tsanaae Game. 精选优质游戏资源导航',
+    wechat_qr_code: '',
+    footer_links: [],
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -140,6 +144,46 @@ export default function AdminSettingsPage() {
               <img src={settings.site_bg_image} alt="背景预览" className="w-full h-full object-cover" />
             </div>
           )}
+        </div>
+      </div>
+
+      {/* WeChat & Footer */}
+      <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-white mb-2">微信 & 页脚</h3>
+        <div>
+          <label className={labelClass}>微信二维码图片 URL</label>
+          <input type="text" value={settings.wechat_qr_code} onChange={e => setSettings({ ...settings, wechat_qr_code: e.target.value })} placeholder="上传微信二维码图片链接" className={inputClass} />
+          {settings.wechat_qr_code && (
+            <div className="mt-2 w-32 h-32 rounded-lg overflow-hidden border border-white/[0.08]">
+              <img src={settings.wechat_qr_code} alt="微信二维码预览" className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
+        <div>
+          <label className={labelClass}>页脚链接</label>
+          <div className="space-y-2">
+            {(settings.footer_links || []).map((link, i) => (
+              <div key={i} className="flex gap-2">
+                <input type="text" value={link.label} onChange={e => {
+                  const newLinks = [...settings.footer_links];
+                  newLinks[i] = { ...newLinks[i], label: e.target.value };
+                  setSettings({ ...settings, footer_links: newLinks });
+                }} placeholder="链接名称" className={`${inputClass} flex-1`} />
+                <input type="text" value={link.url} onChange={e => {
+                  const newLinks = [...settings.footer_links];
+                  newLinks[i] = { ...newLinks[i], url: e.target.value };
+                  setSettings({ ...settings, footer_links: newLinks });
+                }} placeholder="链接地址" className={`${inputClass} flex-1`} />
+                <button onClick={() => {
+                  const newLinks = settings.footer_links.filter((_, j) => j !== i);
+                  setSettings({ ...settings, footer_links: newLinks });
+                }} className="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors">删除</button>
+              </div>
+            ))}
+            <button onClick={() => {
+              setSettings({ ...settings, footer_links: [...(settings.footer_links || []), { label: '', url: '' }] });
+            }} className="px-4 py-2 bg-white/5 text-[#71717a] rounded-lg hover:bg-white/10 transition-colors text-sm">+ 添加链接</button>
+          </div>
         </div>
       </div>
     </div>

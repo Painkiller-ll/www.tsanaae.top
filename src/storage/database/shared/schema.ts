@@ -58,6 +58,8 @@ export const games = pgTable(
     likes: integer("likes").default(0).notNull(),
     is_featured: boolean("is_featured").default(false).notNull(),
     download_url: text("download_url"),
+    download_links: jsonb("download_links").$type<Array<{label: string; url: string}>>().default([]),
+    download_count: integer("download_count").default(0).notNull(),
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }),
   },
@@ -66,6 +68,21 @@ export const games = pgTable(
     index("games_platform_idx").on(table.platform),
     index("games_created_at_idx").on(table.created_at),
     index("games_is_featured_idx").on(table.is_featured),
+  ]
+);
+
+// User favorites
+export const userFavorites = pgTable(
+  "user_favorites",
+  {
+    id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+    user_id: varchar("user_id", { length: 36 }).notNull(),
+    game_id: varchar("game_id", { length: 36 }).notNull().references(() => games.id, { onDelete: "cascade" }),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("user_favorites_user_id_idx").on(table.user_id),
+    index("user_favorites_game_id_idx").on(table.game_id),
   ]
 );
 
