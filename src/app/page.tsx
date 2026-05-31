@@ -1,9 +1,54 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import GameGrid from '@/components/GameGrid';
 import HotTags from '@/components/HotTags';
 
+interface SiteSettings {
+  site_name: string;
+  site_description: string;
+  site_bg_color: string;
+  site_card_color: string;
+  site_accent_color: string;
+  site_logo_url: string;
+  site_bg_image: string;
+  site_footer_text: string;
+}
+
 export default function Home() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.settings) {
+          setSettings(data.settings);
+          // Apply dynamic styles
+          const root = document.documentElement;
+          if (data.settings.site_bg_color) {
+            root.style.setProperty('--bg-primary', data.settings.site_bg_color);
+            document.body.style.backgroundColor = data.settings.site_bg_color;
+          }
+          if (data.settings.site_accent_color) {
+            root.style.setProperty('--color-primary', data.settings.site_accent_color);
+          }
+          if (data.settings.site_bg_image) {
+            document.body.style.backgroundImage = `url(${data.settings.site_bg_image})`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundAttachment = 'fixed';
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const siteName = settings?.site_name || 'Tsanaae Game';
+  const siteDesc = settings?.site_description || '精选优质游戏资源，发现你的下一款游戏';
+  const footerText = settings?.site_footer_text || '© 2025 Tsanaae Game. 精选优质游戏资源导航';
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -12,10 +57,10 @@ export default function Home() {
         {/* Hero Section */}
         <section className="mb-10 text-center py-8">
           <h1 className="text-4xl sm:text-5xl font-bold gradient-text mb-4">
-            Tsanaae Game
+            {siteName}
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            精选优质游戏资源，发现你的下一款游戏
+            {siteDesc}
           </p>
         </section>
 
@@ -90,10 +135,10 @@ export default function Home() {
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
               </div>
-              <span className="text-sm font-semibold gradient-text">Tsanaae Game</span>
+              <span className="text-sm font-semibold gradient-text">{siteName}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              © 2025 Tsanaae Game. 精选优质游戏资源导航
+              {footerText}
             </p>
           </div>
         </div>

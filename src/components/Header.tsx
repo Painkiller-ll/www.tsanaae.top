@@ -1,10 +1,50 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+
+interface UserInfo {
+  id: string;
+  email: string;
+  nickname: string;
+  points: number;
+  avatar_url: string;
+}
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const checkUserAuth = useCallback(async () => {
+    try {
+      const res = await fetch('/api/user/auth/check');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      }
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkUserAuth();
+  }, [checkUserAuth]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/user/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore
+    }
+    setUser(null);
+    setShowUserMenu(false);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,8 +89,8 @@ export default function Header() {
             </div>
           </form>
 
-          {/* Nav */}
-          <nav className="flex items-center gap-1 shrink-0">
+          {/* Nav + User */}
+          <div className="flex items-center gap-1 shrink-0">
             <Link
               href="/games/pc"
               className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
@@ -63,7 +103,49 @@ export default function Header() {
             >
               手机游戏
             </Link>
-          </nav>
+
+            {user ? (
+              <div className="relative ml-2">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-secondary/50 transition-colors"
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
+                    {user.nickname.charAt(0)}
+                  </div>
+                  <span className="hidden sm:inline text-sm">{user.nickname}</span>
+                  <span className="text-xs text-yellow-500 font-medium">{user.points}分</span>
+                </button>
+                {showUserMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+                      <Link
+                        href="/profile"
+                        onClick={() => setShowUserMenu(false)}
+                        className="block w-full px-4 py-3 text-sm text-foreground hover:bg-secondary/50 transition-colors text-left"
+                      >
+                        个人中心
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full px-4 py-3 text-sm text-red-400 hover:bg-secondary/50 transition-colors text-left"
+                      >
+                        退出登录
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="ml-2 rounded-lg px-4 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                登录
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>

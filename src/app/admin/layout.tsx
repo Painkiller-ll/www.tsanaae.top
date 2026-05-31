@@ -14,6 +14,7 @@ const navItems = [
   { href: '/admin/categories', label: '分类管理', icon: '📁' },
   { href: '/admin/tags', label: '标签管理', icon: '🏷️' },
   { href: '/admin/comments', label: '评论管理', icon: '💬' },
+  { href: '/admin/settings', label: '站点设置', icon: '⚙️' },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
