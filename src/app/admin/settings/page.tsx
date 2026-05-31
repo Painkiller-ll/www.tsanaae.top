@@ -14,6 +14,7 @@ interface Settings {
   site_footer_text: string;
   wechat_qr_code: string;
   footer_links: { label: string; url: string }[];
+  share_text_template: string;
 }
 
 export default function AdminSettingsPage() {
@@ -29,6 +30,7 @@ export default function AdminSettingsPage() {
     site_footer_text: '© 2025 Tsanaae Game. 精选优质游戏资源导航',
     wechat_qr_code: '',
     footer_links: [],
+    share_text_template: '来{site_name}一起玩「{game_title}」吧！',
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -147,9 +149,9 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* WeChat & Footer */}
+      {/* WeChat & Footer & Share */}
       <div className="bg-[#1a1a24] rounded-xl border border-white/[0.08] p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-white mb-2">微信 & 页脚</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">微信 & 页脚 & 分享</h3>
         <div>
           <label className={labelClass}>微信二维码图片 URL</label>
           <input type="text" value={settings.wechat_qr_code} onChange={e => setSettings({ ...settings, wechat_qr_code: e.target.value })} placeholder="上传微信二维码图片链接" className={inputClass} />
@@ -184,6 +186,11 @@ export default function AdminSettingsPage() {
               setSettings({ ...settings, footer_links: [...(settings.footer_links || []), { label: '', url: '' }] });
             }} className="px-4 py-2 bg-white/5 text-[#71717a] rounded-lg hover:bg-white/10 transition-colors text-sm">+ 添加链接</button>
           </div>
+        </div>
+        <div>
+          <label className={labelClass}>分享文案模板</label>
+          <input type="text" value={settings.share_text_template} onChange={e => setSettings({ ...settings, share_text_template: e.target.value })} placeholder="来{site_name}一起玩「{game_title}」吧！" className={inputClass} />
+          <p className="text-xs text-[#71717a] mt-1">支持变量: {'{site_name}'} = 站点名, {'{game_title}'} = 游戏名</p>
         </div>
       </div>
     </div>
