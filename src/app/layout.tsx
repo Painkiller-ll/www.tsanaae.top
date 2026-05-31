@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import Footer from '@/components/Footer';
-import FloatingBall from '@/components/FloatingBall';
+
 import MusicPlayer from '@/components/MusicPlayer';
 import ThemeProvider from '@/components/ThemeProvider';
 
@@ -41,7 +41,7 @@ export default function RootLayout({
           {isDev && <Inspector />}
           <div className="flex-1">{children}</div>
           <Footer />
-          <FloatingBall />
+
           <MusicPlayer />
         </ThemeProvider>
       </body>
