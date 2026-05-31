@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
     let query = client
       .from('games')
-      .select('id, title, cover_image, category_id, platform, likes, is_featured, avg_rating, created_at, categories(id, name, slug)')
+      .select('id, title, cover_image, category_id, platform, likes, is_featured, avg_rating, download_count, unlock_points, created_at, updated_at, categories(id, name, slug)')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

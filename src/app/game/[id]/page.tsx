@@ -13,6 +13,54 @@ interface DownloadLink {
   type: string;
 }
 
+function RelatedGames({ categoryId, currentGameId, tags }: { categoryId: string; currentGameId: string; tags: { id: string; name: string }[] }) {
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRelated() {
+      try {
+        const res = await fetch(`/api/games?category=${categoryId}&limit=6`);
+        if (res.ok) {
+          const data = await res.json();
+          const filtered = (data.games || []).filter((g: Game) => g.id !== currentGameId).slice(0, 4);
+          setGames(filtered);
+        }
+      } catch {
+        // 静默
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRelated();
+  }, [categoryId, currentGameId]);
+
+  if (loading) return <div className="text-zinc-500 text-sm">加载推荐中...</div>;
+  if (games.length === 0) return null;
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {games.map(g => (
+        <Link key={g.id} href={`/game/${g.id}`} className="group">
+          <div className="bg-card rounded-lg overflow-hidden border border-border hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5">
+            <div className="aspect-video overflow-hidden">
+              <img src={g.cover_image} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            </div>
+            <div className="p-2.5">
+              <h3 className="text-xs font-medium text-foreground truncate">{g.title}</h3>
+              <div className="flex items-center gap-1 mt-1">
+                {g.avg_rating != null && g.avg_rating > 0 && (
+                  <span className="text-[10px] text-yellow-500">★ {Number(g.avg_rating).toFixed(1)}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default function GameDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -644,6 +692,12 @@ export default function GameDetailPage() {
               ))
             )}
           </div>
+        </section>
+
+        {/* 相关推荐 */}
+        <section className="mt-8">
+          <h2 className="text-lg font-bold text-foreground mb-4">相关推荐</h2>
+          <RelatedGames categoryId={game.category_id} currentGameId={game.id} tags={game.tags || []} />
         </section>
       </div>
 

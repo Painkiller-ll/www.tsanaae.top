@@ -3,6 +3,7 @@ import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import Footer from '@/components/Footer';
 import FloatingBall from '@/components/FloatingBall';
+import ThemeProvider from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: {
@@ -35,10 +36,12 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="dark">
       <body className={`antialiased min-h-screen bg-background flex flex-col`}>
-        {isDev && <Inspector />}
-        <div className="flex-1">{children}</div>
-        <Footer />
-        <FloatingBall />
+        <ThemeProvider>
+          {isDev && <Inspector />}
+          <div className="flex-1">{children}</div>
+          <Footer />
+          <FloatingBall />
+        </ThemeProvider>
       </body>
     </html>
   );

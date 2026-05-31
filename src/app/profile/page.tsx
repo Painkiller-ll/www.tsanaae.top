@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getUserLevel, USER_LEVELS } from '@/lib/types';
+import CheckinCalendar from '@/components/CheckinCalendar';
 
 interface UserInfo {
   id: string;
@@ -278,6 +279,9 @@ export default function ProfilePage() {
               <p className="text-sm text-[#a855f7]">签到成功！获得 {checkInResult.points_earned} 积分（连续{checkInResult.consecutive_days}天）</p>
             </div>
           )}
+          <div className="mt-4">
+            <CheckinCalendar />
+          </div>
         </div>
 
         {/* Point Tasks Card */}

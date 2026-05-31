@@ -95,6 +95,31 @@ export async function POST(
       }
     }
 
+    // 通知：如果是回复其他评论（被回复评论的用户收到通知）
+    try {
+      const replyMatch = content.match(/@(\S+)/);
+      if (replyMatch) {
+        const replyNickname = replyMatch[1];
+        const { data: replyUser } = await client
+          .from('comments')
+          .select('user_id')
+          .eq('game_id', id)
+          .eq('nickname', replyNickname)
+          .limit(1);
+        if (replyUser && replyUser.length > 0 && replyUser[0].user_id) {
+          await client.from('notifications').insert({
+            user_id: replyUser[0].user_id,
+            type: 'comment_reply',
+            title: `${nickname} 回复了你的评论`,
+            content: content.substring(0, 100),
+            link: `/game/${id}`,
+          });
+        }
+      }
+    } catch {
+      // 通知是可选的
+    }
+
     return NextResponse.json({ comment: data });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

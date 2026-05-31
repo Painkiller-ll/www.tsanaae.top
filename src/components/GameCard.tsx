@@ -33,6 +33,12 @@ export default function GameCard({ game }: GameCardProps) {
               {game.platform === 'pc' ? 'PC' : game.platform === 'mobile' ? '手机' : '网页'}
             </span>
           </div>
+          {/* NEW badge - updated within 7 days */}
+          {game.updated_at && (Date.now() - new Date(game.updated_at).getTime()) < 7 * 86400000 && (
+            <div className="absolute top-2 left-2">
+              <span className="rounded-md bg-green-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white">NEW</span>
+            </div>
+          )}
         </div>
 
         {/* Info */}

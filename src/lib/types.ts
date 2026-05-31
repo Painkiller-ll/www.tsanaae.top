@@ -159,3 +159,26 @@ export interface PointTask {
   type: 'comment' | 'rate' | 'share' | 'favorite' | 'daily_limit';
   max_per_day: number;
 }
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: 'comment_reply' | 'rating' | 'system' | 'invite' | 'unlock' | 'purchase';
+  title: string;
+  content: string | null;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface WishlistItem {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  vote_count: number;
+  status: 'pending' | 'approved' | 'completed' | 'rejected';
+  created_at: string;
+  updated_at: string | null;
+  has_voted?: boolean;
+}
