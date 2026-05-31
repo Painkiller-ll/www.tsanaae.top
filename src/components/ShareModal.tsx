@@ -12,6 +12,10 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
   const [sharing, setSharing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
+  const gameUrl = typeof window !== 'undefined' ? `${window.location.origin}/game/${game.id}` : '';
+  const shareTitle = game.title;
+  const shareDesc = `来Tsanaae游戏站一起玩「${game.title}」吧！`;
+
   const shareOptions = [
     { platform: 'wechat', name: '微信', icon: '💬', color: 'bg-green-600/20 hover:bg-green-600/30' },
     { platform: 'qq', name: 'QQ', icon: '🐧', color: 'bg-blue-600/20 hover:bg-blue-600/30' },
@@ -19,26 +23,66 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
     { platform: 'link', name: '复制链接', icon: '🔗', color: 'bg-purple-600/20 hover:bg-purple-600/30' },
   ];
 
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    // 优先使用 Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // fallback
+      }
+    }
+    // Fallback: 使用 textarea 复制
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return success;
+    } catch {
+      return false;
+    }
+  };
+
   const handleShare = async (platform: string) => {
     setSharing(true);
     setResult(null);
 
     try {
-      const gameUrl = `${window.location.origin}/game/${game.id}`;
-
       if (platform === 'link') {
-        await navigator.clipboard.writeText(gameUrl);
-        setResult('链接已复制到剪贴板');
-      } else {
-        // 模拟分享（实际项目中需要集成第三方SDK）
-        const shareText = `推荐游戏：${game.title} - ${gameUrl}`;
-        if (navigator.share) {
-          await navigator.share({ title: game.title, text: shareText, url: gameUrl });
-          setResult('分享成功');
+        // 复制链接
+        const success = await copyToClipboard(gameUrl);
+        if (success) {
+          setResult('链接已复制到剪贴板');
         } else {
-          await navigator.clipboard.writeText(shareText);
-          setResult('分享内容已复制，请粘贴到对应平台');
+          setResult('复制失败，请手动复制链接');
         }
+      } else if (platform === 'wechat') {
+        // 微信分享：由于微信没有开放分享URL scheme，提示用户复制链接后在微信中粘贴
+        const shareText = `${shareDesc}\n${gameUrl}`;
+        const success = await copyToClipboard(shareText);
+        if (success) {
+          setResult('分享内容已复制，请打开微信粘贴发送给好友');
+        } else {
+          setResult('复制失败，请手动复制链接');
+        }
+      } else if (platform === 'qq') {
+        // QQ 分享 URL scheme
+        const qqShareUrl = `https://connect.qq.com/widget/shareqq/index.html?title=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(gameUrl)}&summary=${encodeURIComponent(shareDesc)}`;
+        window.open(qqShareUrl, '_blank', 'width=600,height=500');
+        setResult('已打开QQ分享窗口');
+      } else if (platform === 'weibo') {
+        // 微博分享 URL scheme
+        const weiboShareUrl = `https://service.weibo.com/share/share.php?title=${encodeURIComponent(shareDesc)}&url=${encodeURIComponent(gameUrl)}`;
+        window.open(weiboShareUrl, '_blank', 'width=600,height=500');
+        setResult('已打开微博分享窗口');
       }
 
       // 记录分享行为，获取积分
@@ -48,21 +92,25 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
         ?.split('=')[1];
 
       if (token) {
-        const res = await fetch('/api/user/share', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ game_id: game.id, platform }),
-        });
-        const data = await res.json();
-        if (data.points_earned > 0) {
-          setResult(prev => prev ? `${prev} (+${data.points_earned}积分)` : `获得${data.points_earned}积分`);
+        try {
+          const res = await fetch('/api/user/share', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ game_id: game.id, platform }),
+          });
+          const data = await res.json();
+          if (data.points_earned > 0) {
+            setResult(prev => prev ? `${prev} (+${data.points_earned}积分)` : `获得${data.points_earned}积分`);
+          }
+        } catch {
+          // 积分记录失败不影响分享体验
         }
       }
     } catch {
-      setResult('分享操作取消');
+      setResult('分享操作出现问题，请重试');
     } finally {
       setSharing(false);
     }
@@ -108,6 +156,13 @@ export default function ShareModal({ game, onClose }: ShareModalProps) {
             <p className="text-sm text-primary">{result}</p>
           </div>
         )}
+
+        <button
+          onClick={onClose}
+          className="mt-3 w-full py-2 rounded-xl bg-secondary/30 border border-border/30 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+        >
+          关闭
+        </button>
       </div>
     </div>
   );
