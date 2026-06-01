@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import Footer from '@/components/Footer';
+import RightSidebar from '@/components/RightSidebar';
 
 import ThemeProvider from '@/components/ThemeProvider';
 
@@ -40,6 +41,7 @@ export default function RootLayout({
           {isDev && <Inspector />}
           <div className="flex-1">{children}</div>
           <Footer />
+          <RightSidebar />
         </ThemeProvider>
       </body>
     </html>

@@ -67,13 +67,10 @@ export default function AnnouncementBar() {
                 </span>
               )}
             </div>
-            <p className={`text-xs text-muted-foreground mt-0.5 ${isExpanded ? '' : 'line-clamp-1'}`}>
-              {current.content}
-            </p>
-            {isExpanded && current.content.length > 50 && (
-              <div className="mt-2 pt-2 border-t border-border">
-                <p className="text-xs text-foreground/80 whitespace-pre-wrap leading-relaxed">{current.content}</p>
-              </div>
+            {isExpanded ? (
+              <p className="text-xs text-foreground/80 whitespace-pre-wrap leading-relaxed mt-1">{current.content}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{current.content}</p>
             )}
           </div>
           {announcements.length > 1 && (
