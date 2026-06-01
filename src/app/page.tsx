@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import GameGrid from '@/components/GameGrid';
 import HotTags from '@/components/HotTags';
 import AnnouncementBar from '@/components/AnnouncementBar';
+import RightSidebar from '@/components/RightSidebar';
 import { Game, Collection } from '@/lib/types';
 
 interface UserInfo {
@@ -73,6 +74,9 @@ export default function Home() {
       <AnnouncementBar />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex gap-6">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
         {/* Hero Section */}
         <section className="mb-10 text-center py-8">
           <h1 className="text-4xl sm:text-5xl font-bold gradient-text mb-4">
@@ -120,7 +124,14 @@ export default function Home() {
             </h2>
           </div>
           <GameGrid />
-        </section>
+          </section>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="hidden lg:block w-72 flex-shrink-0">
+            <RightSidebar />
+          </div>
+        </div>
       </main>
 
       <FooterSection siteName={settings?.site_name || 'Tsanaae Game'} footerText={settings?.site_footer_text || '© 2025 Tsanaae Game. 精选优质游戏资源导航'} />

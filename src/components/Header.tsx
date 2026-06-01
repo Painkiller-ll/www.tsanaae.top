@@ -166,6 +166,12 @@ export default function Header() {
             >
               心愿
             </Link>
+            <Link
+              href="/faq"
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+            >
+              帮助
+            </Link>
 
             {user ? (
               <>
@@ -225,6 +231,13 @@ export default function Header() {
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
                         积分排行
+                      </Link>
+                      <Link
+                        href="/contact"
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground hover:bg-secondary/50 transition-colors"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        联系我们
                       </Link>
                       <button
                         onClick={handleLogout}

@@ -20,6 +20,7 @@ const navItems = [
   { href: '/admin/shop', label: '商城管理', icon: '🛒' },
   { href: '/admin/wishlist', label: '心愿单', icon: '🌟' },
   { href: '/admin/music', label: '音乐管理', icon: '🎵' },
+  { href: '/admin/faqs', label: 'FAQ管理', icon: '❓' },
   { href: '/admin/settings', label: '站点设置', icon: '⚙️' },
 ];
 

@@ -15,6 +15,12 @@ interface Settings {
   wechat_qr_code: string;
   footer_links: { label: string; url: string }[];
   share_text_template: string;
+  contact_qq: string;
+  contact_wechat: string;
+  contact_email: string;
+  contact_telegram: string;
+  contact_github: string;
+  about_text: string;
 }
 
 export default function AdminSettingsPage() {
@@ -31,6 +37,12 @@ export default function AdminSettingsPage() {
     wechat_qr_code: '',
     footer_links: [],
     share_text_template: '来{site_name}一起玩「{game_title}」吧！',
+    contact_qq: '',
+    contact_wechat: '',
+    contact_email: '',
+    contact_telegram: '',
+    contact_github: '',
+    about_text: '',
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -191,6 +203,37 @@ export default function AdminSettingsPage() {
           <label className={labelClass}>分享文案模板</label>
           <input type="text" value={settings.share_text_template} onChange={e => setSettings({ ...settings, share_text_template: e.target.value })} placeholder="来{site_name}一起玩「{game_title}」吧！" className={inputClass} />
           <p className="text-xs text-[#71717a] mt-1">支持变量: {'{site_name}'} = 站点名, {'{game_title}'} = 游戏名</p>
+        </div>
+      </div>
+
+      {/* 联系我们 & 关于 */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">联系我们 & 关于</h3>
+        <div className="space-y-4">
+          <div>
+            <label className={labelClass}>站长QQ</label>
+            <input type="text" value={settings.contact_qq} onChange={e => setSettings({ ...settings, contact_qq: e.target.value })} placeholder="QQ号码" className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>微信号</label>
+            <input type="text" value={settings.contact_wechat} onChange={e => setSettings({ ...settings, contact_wechat: e.target.value })} placeholder="微信号" className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>邮箱</label>
+            <input type="email" value={settings.contact_email} onChange={e => setSettings({ ...settings, contact_email: e.target.value })} placeholder="contact@example.com" className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Telegram</label>
+            <input type="text" value={settings.contact_telegram} onChange={e => setSettings({ ...settings, contact_telegram: e.target.value })} placeholder="Telegram用户名" className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>GitHub</label>
+            <input type="text" value={settings.contact_github} onChange={e => setSettings({ ...settings, contact_github: e.target.value })} placeholder="GitHub用户名" className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>关于本站</label>
+            <textarea value={settings.about_text} onChange={e => setSettings({ ...settings, about_text: e.target.value })} placeholder="介绍你的网站..." className={inputClass} rows={4} />
+          </div>
         </div>
       </div>
     </div>

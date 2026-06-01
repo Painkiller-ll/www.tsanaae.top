@@ -3,7 +3,6 @@ import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import Footer from '@/components/Footer';
 
-import MusicPlayer from '@/components/MusicPlayer';
 import ThemeProvider from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
@@ -41,8 +40,6 @@ export default function RootLayout({
           {isDev && <Inspector />}
           <div className="flex-1">{children}</div>
           <Footer />
-
-          <MusicPlayer />
         </ThemeProvider>
       </body>
     </html>
