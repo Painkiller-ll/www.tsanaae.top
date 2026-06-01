@@ -47,13 +47,6 @@ function SearchContent() {
       <Header />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link href="/" className="hover:text-foreground transition-colors">首页</Link>
-          <span>/</span>
-          <span className="text-foreground">搜索: {searchTitle}</span>
-        </nav>
-
         {/* Title */}
         <PageHeader
           title={tag ? `标签: ${tag}` : `搜索: ${q}`}

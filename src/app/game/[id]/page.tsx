@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import { Game, Comment } from '@/lib/types';
 import { getUserLevel } from '@/lib/types';
@@ -330,6 +331,8 @@ export default function GameDetailPage() {
 
   return (
     <div className="min-h-screen">
+      <Header />
+
       {/* Lightbox for screenshots */}
       {lightboxImg && (
         <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setLightboxImg(null)}>
@@ -340,17 +343,17 @@ export default function GameDetailPage() {
         </div>
       )}
 
-      {/* Breadcrumb */}
-      <PageHeader
-        title={game.title}
-        breadcrumbs={[
-          { label: '首页', href: '/' },
-          ...(game.categories ? [{ label: game.categories.name, href: `/games/${game.categories.slug}` }] : []),
-          { label: game.title }
-        ]}
-      />
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <PageHeader
+          title={game.title}
+          breadcrumbs={[
+            { label: '首页', href: '/' },
+            ...(game.categories ? [{ label: game.categories.name, href: `/games/${game.categories.slug}` }] : []),
+            { label: game.title }
+          ]}
+        />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           {/* Cover */}
@@ -691,7 +694,7 @@ export default function GameDetailPage() {
           <h2 className="text-lg font-bold text-foreground mb-4">相关推荐</h2>
           <RelatedGames categoryId={game.category_id} currentGameId={game.id} tags={game.tags || []} />
         </section>
-      </div>
+      </main>
 
       {/* Share Modal */}
       {showShareModal && game && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 
 interface FavoriteGame {
@@ -67,14 +68,10 @@ export default function FavoritesPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <PageHeader title="我的收藏" breadcrumbs={[{ label: '首页', href: '/' }, { label: '我的收藏' }]} />
-            <p className="text-sm text-muted-foreground mt-1">共 {games.length} 款游戏</p>
-          </div>
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← 返回首页</Link>
-        </div>
+      <Header />
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <PageHeader title="我的收藏" breadcrumbs={[{ label: '首页', href: '/' }, { label: '我的收藏' }]} />
+        <p className="text-sm text-muted-foreground -mt-4 mb-6">共 {games.length} 款游戏</p>
 
         {games.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -115,7 +112,7 @@ export default function FavoritesPage() {
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

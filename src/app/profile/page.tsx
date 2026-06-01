@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import { getUserLevel, USER_LEVELS } from '@/lib/types';
 import CheckinCalendar from '@/components/CheckinCalendar';
@@ -159,9 +160,9 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="个人中心" breadcrumbs={[{ label: '首页', href: '/' }, { label: '个人中心' }]} />
-
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <Header />
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+        <PageHeader title="个人中心" breadcrumbs={[{ label: '首页', href: '/' }, { label: '个人中心' }]} />
         {/* User Info Card with Level */}
         <div className="bg-card rounded-xl border border-border p-6">
           <div className="flex items-center gap-4">
@@ -422,7 +423,7 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

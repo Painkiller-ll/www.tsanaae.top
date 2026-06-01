@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import { getUserLevel, USER_LEVELS } from '@/lib/types';
 
@@ -89,9 +90,10 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen">
-      <PageHeader title="积分商城" />
+      <Header />
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <PageHeader title="积分商城" breadcrumbs={[{ label: '首页', href: '/' }, { label: '积分商城' }]} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* User Stats Banner */}
         <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -212,7 +214,7 @@ export default function ShopPage() {
             ))}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

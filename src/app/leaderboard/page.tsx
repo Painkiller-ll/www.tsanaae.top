@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getUserLevel } from '@/lib/types';
+import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 
 interface LeaderboardEntry {
@@ -28,9 +29,9 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen">
-      <PageHeader title="积分排行榜" icon="🏆" breadcrumbs={[{ label: '首页', href: '/' }, { label: '积分排行榜' }]} />
-
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
+      <Header />
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
+        <PageHeader title="积分排行榜" icon="🏆" breadcrumbs={[{ label: '首页', href: '/' }, { label: '积分排行榜' }]} />
 
         {/* Top 3 Podium */}
         {leaders.length >= 3 && (
@@ -112,7 +113,7 @@ export default function LeaderboardPage() {
             })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

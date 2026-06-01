@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import Link from 'next/link';
 
@@ -52,8 +53,9 @@ export default function ContactPage() {
   ].filter(c => c.value);
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="max-w-4xl mx-auto px-4 py-8">
         <PageHeader title="联系我们" breadcrumbs={[{ label: '首页', href: '/' }]} />
 
         {/* 关于我们 */}
@@ -116,7 +118,7 @@ export default function ContactPage() {
             <p className="text-muted-foreground">站长尚未设置联系方式，请稍后再来查看</p>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

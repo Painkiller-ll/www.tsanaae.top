@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 
 interface FAQ {
@@ -22,8 +23,9 @@ export default function FAQPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="max-w-3xl mx-auto px-4 py-8">
         <PageHeader title="常见问题" breadcrumbs={[{ label: '首页', href: '/' }]} />
 
         {faqs.length === 0 ? (
@@ -69,7 +71,7 @@ export default function FAQPage() {
             没有找到答案？联系我们 →
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
