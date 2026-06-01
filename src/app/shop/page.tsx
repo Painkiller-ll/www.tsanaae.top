@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import PageHeader from '@/components/PageHeader';
 import { getUserLevel, USER_LEVELS } from '@/lib/types';
 
 interface ShopItem {
@@ -88,15 +89,7 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="border-b border-border/50 bg-card/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors">首页</Link>
-            <span>/</span>
-            <span className="text-foreground">积分商城</span>
-          </nav>
-        </div>
-      </div>
+      <PageHeader title="积分商城" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* User Stats Banner */}

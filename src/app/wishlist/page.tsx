@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 
 interface WishlistItem {
@@ -93,7 +94,7 @@ export default function WishlistPage() {
         {/* 标题区 */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">游戏心愿单</h1>
+            <PageHeader title="游戏心愿单" breadcrumbs={[{ label: '首页', href: '/' }, { label: '心愿单' }]} />
             <p className="text-zinc-500 text-sm mt-1">想玩什么游戏？说出来让大家一起投票</p>
           </div>
           <button

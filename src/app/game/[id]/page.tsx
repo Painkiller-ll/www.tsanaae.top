@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import PageHeader from '@/components/PageHeader';
 import { Game, Comment } from '@/lib/types';
 import { getUserLevel } from '@/lib/types';
 import Link from 'next/link';
@@ -340,23 +341,14 @@ export default function GameDetailPage() {
       )}
 
       {/* Breadcrumb */}
-      <div className="border-b border-border/50 bg-card/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors">首页</Link>
-            <span>/</span>
-            {game.categories && (
-              <>
-                <Link href={`/games/${game.categories.slug}`} className="hover:text-foreground transition-colors">
-                  {game.categories.name}
-                </Link>
-                <span>/</span>
-              </>
-            )}
-            <span className="text-foreground">{game.title}</span>
-          </nav>
-        </div>
-      </div>
+      <PageHeader
+        title={game.title}
+        breadcrumbs={[
+          { label: '首页', href: '/' },
+          ...(game.categories ? [{ label: game.categories.name, href: `/games/${game.categories.slug}` }] : []),
+          { label: game.title }
+        ]}
+      />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero */}

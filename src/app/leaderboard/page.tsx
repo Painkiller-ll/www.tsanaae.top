@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { getUserLevel } from '@/lib/types';
+import PageHeader from '@/components/PageHeader';
 
 interface LeaderboardEntry {
   rank: number;
@@ -28,20 +28,9 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="border-b border-border/50 bg-card/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors">首页</Link>
-            <span>/</span>
-            <span className="text-foreground">积分排行榜</span>
-          </nav>
-        </div>
-      </div>
+      <PageHeader title="积分排行榜" icon="🏆" breadcrumbs={[{ label: '首页', href: '/' }, { label: '积分排行榜' }]} />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-8 flex items-center gap-3">
-          <span className="text-3xl">🏆</span> 积分排行榜
-        </h1>
 
         {/* Top 3 Podium */}
         {leaders.length >= 3 && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import PageHeader from '@/components/PageHeader';
 
 interface FavoriteGame {
   id: string;
@@ -69,7 +70,7 @@ export default function FavoritesPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">我的收藏</h1>
+            <PageHeader title="我的收藏" breadcrumbs={[{ label: '首页', href: '/' }, { label: '我的收藏' }]} />
             <p className="text-sm text-muted-foreground mt-1">共 {games.length} 款游戏</p>
           </div>
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← 返回首页</Link>

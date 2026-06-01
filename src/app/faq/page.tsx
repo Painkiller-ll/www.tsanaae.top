@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import PageHeader from '@/components/PageHeader';
 
 interface FAQ {
   id: string;
@@ -23,13 +24,7 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link href="/" className="hover:text-purple-400 transition-colors">首页</Link>
-          <span>/</span>
-          <span className="text-foreground">常见问题</span>
-        </div>
-
-        <h1 className="text-2xl font-bold text-foreground mb-6">常见问题</h1>
+        <PageHeader title="常见问题" breadcrumbs={[{ label: '首页', href: '/' }]} />
 
         {faqs.length === 0 ? (
           <div className="bg-card rounded-xl border border-border p-12 text-center">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
 import { useSearchParams } from 'next/navigation';
 import { Game } from '@/lib/types';
 import Header from '@/components/Header';
@@ -54,14 +55,11 @@ function SearchContent() {
         </nav>
 
         {/* Title */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            {tag ? `标签: ${tag}` : `搜索: ${q}`}
-          </h1>
-          <p className="text-muted-foreground">
-            找到 {games.length} 个结果
-          </p>
-        </div>
+        <PageHeader
+          title={tag ? `标签: ${tag}` : `搜索: ${q}`}
+          description={`找到 ${games.length} 个结果`}
+          breadcrumbs={[{ label: '首页', href: '/' }, { label: '搜索' }]}
+        />
 
         {/* Results */}
         {loading ? (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import PageHeader from '@/components/PageHeader';
 import Link from 'next/link';
 
 interface SiteSettings {
@@ -53,12 +54,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* 面包屑 */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link href="/" className="hover:text-purple-400 transition-colors">首页</Link>
-          <span>/</span>
-          <span className="text-foreground">联系我们</span>
-        </div>
+        <PageHeader title="联系我们" breadcrumbs={[{ label: '首页', href: '/' }]} />
 
         {/* 关于我们 */}
         {settings.about_text && (

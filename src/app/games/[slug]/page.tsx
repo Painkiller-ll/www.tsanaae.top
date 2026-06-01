@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
 import { useParams } from 'next/navigation';
 import { Game, GameTag } from '@/lib/types';
 import Header from '@/components/Header';
@@ -66,18 +67,8 @@ export default function CategoryPage() {
       <Header />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link href="/" className="hover:text-foreground transition-colors">首页</Link>
-          <span>/</span>
-          <span className="text-foreground">{title}</span>
-        </nav>
+        <PageHeader title={title} description={description} breadcrumbs={[{ label: '首页', href: '/' }, { label: title }]} />
 
-        {/* Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-2">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
-        </div>
 
         {/* Tag Filters */}
         <div className="mb-8">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import PageHeader from '@/components/PageHeader';
 import { getUserLevel, USER_LEVELS } from '@/lib/types';
 import CheckinCalendar from '@/components/CheckinCalendar';
 
@@ -158,23 +159,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-card border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="h-8 w-8 items-center justify-center rounded-md bg-purple-600 flex">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-              </div>
-              <span className="text-sm font-semibold gradient-text">Tsanaae Game</span>
-            </Link>
-            <h1 className="text-lg font-bold text-white">个人中心</h1>
-            <div className="w-24" />
-          </div>
-        </div>
-      </div>
+      <PageHeader title="个人中心" breadcrumbs={[{ label: '首页', href: '/' }, { label: '个人中心' }]} />
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* User Info Card with Level */}

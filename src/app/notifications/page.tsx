@@ -1,4 +1,4 @@
-'use client';
+import PageHeader from '@/components/PageHeader';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -78,7 +78,7 @@ export default function NotificationsPage() {
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">消息通知</h1>
+            <PageHeader title="消息通知" breadcrumbs={[{ label: '首页', href: '/' }, { label: '消息通知' }]} />
             {unreadCount > 0 && (
               <p className="text-zinc-500 text-sm mt-1">{unreadCount} 条未读</p>
             )}

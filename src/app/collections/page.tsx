@@ -1,4 +1,5 @@
-'use client';
+'use client';import PageHeader from '@/components/PageHeader';
+
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -24,7 +25,7 @@ export default function CollectionsPage() {
     <div className="min-h-screen">
       <Header />
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-6">游戏合集</h1>
+        <PageHeader title="游戏合集" breadcrumbs={[{ label: '首页', href: '/' }, { label: '游戏合集' }]} />
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
