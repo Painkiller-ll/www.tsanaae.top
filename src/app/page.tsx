@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import RightSidebar from '@/components/RightSidebar';
 import AnnouncementBar from '@/components/AnnouncementBar';
 import ResourceCard from '@/components/ResourceCard';
@@ -132,15 +133,4 @@ export default function HomePage() {
   );
 }
 
-function Footer() {
-  return (
-    <footer className="border-t border-border bg-background mt-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Tsanaae. All rights reserved.</p>
-          <p className="text-xs text-muted-foreground/50">Powered by Tsanaae</p>
-        </div>
-      </div>
-    </footer>
-  );
-}
+
