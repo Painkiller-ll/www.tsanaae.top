@@ -8,18 +8,19 @@ import ThemeProvider from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Tsanaae Game - 游戏资源导航',
-    template: '%s | Tsanaae Game',
+    default: 'Tsanaae - 全品类资源库',
+    template: '%s | Tsanaae',
   },
-  description: '精选优质游戏资源导航，发现你的下一款游戏',
+  description: '学习资料 · 影视剧 · 音乐 · 游戏 · 小说 · 实用软件 — 一站式资源库',
   keywords: [
+    '资源库',
+    '学习资料',
+    '影视剧',
+    '音乐',
     '游戏',
-    '游戏资源',
-    '游戏导航',
-    'PC游戏',
-    '手机游戏',
-    '独立游戏',
-    '游戏推荐',
+    '小说',
+    '软件',
+    '资源导航',
   ],
   robots: {
     index: true,

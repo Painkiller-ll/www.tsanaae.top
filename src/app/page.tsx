@@ -1,315 +1,144 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import GameGrid from '@/components/GameGrid';
-import HotTags from '@/components/HotTags';
+import RightSidebar from '@/components/RightSidebar';
 import AnnouncementBar from '@/components/AnnouncementBar';
+import ResourceCard from '@/components/ResourceCard';
+import { RESOURCE_TYPES, type Resource, type ResourceType } from '@/lib/types';
 
-import { Game, Collection } from '@/lib/types';
-
-interface UserInfo {
-  id: string;
-  email: string;
-  nickname: string;
-  points: number;
-  avatar_url: string;
+interface CategoryGroup {
+  type: ResourceType;
+  resources: Resource[];
 }
 
-interface SiteSettings {
-  site_name: string;
-  site_description: string;
-  site_bg_color: string;
-  site_card_color: string;
-  site_accent_color: string;
-  site_logo_url: string;
-  site_bg_image: string;
-  site_footer_text: string;
-}
-
-export default function Home() {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [user, setUser] = useState<UserInfo | null>(null);
+export default function HomePage() {
+  const [featured, setFeatured] = useState<Resource[]>([]);
+  const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Load site settings
-    fetch('/api/site-settings')
-      .then(res => res.json())
-      .then(data => {
-        if (data.settings) {
-          setSettings(data.settings);
-          const root = document.documentElement;
-          if (data.settings.site_bg_color) {
-            root.style.setProperty('--bg-primary', data.settings.site_bg_color);
-            document.body.style.backgroundColor = data.settings.site_bg_color;
-          }
-          if (data.settings.site_accent_color) {
-            root.style.setProperty('--color-primary', data.settings.site_accent_color);
-          }
-          if (data.settings.site_bg_image) {
-            document.body.style.backgroundImage = `url(${data.settings.site_bg_image})`;
-            document.body.style.backgroundSize = 'cover';
-            document.body.style.backgroundAttachment = 'fixed';
-          }
-        }
-      })
-      .catch(() => {});
-
-    // Check user auth
-    fetch('/api/user/auth/check')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.authenticated && data?.user) {
-          setUser(data.user);
-        }
-      })
-      .catch(() => {});
+    // 获取精选资源
+    fetch('/api/resources?featured=true&limit=8').then(r => r.json()).then(d => { if (d.data) setFeatured(d.data); }).catch(() => {});
+    // 获取各分类最新
+    const types: ResourceType[] = ['study', 'movie', 'music', 'game', 'novel', 'software'];
+    Promise.all(types.map(t => fetch(`/api/resources?type=${t}&limit=6`).then(r => r.json()).then(d => ({ type: t, resources: d.data || [] })))).then(groups => setCategoryGroups(groups));
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
+  };
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header />
 
-      <AnnouncementBar />
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
+        {/* 公告栏 */}
+        <AnnouncementBar />
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Main Content */}
-        {/* Hero Section */}
-        <section className="mb-10 text-center py-8">
-          <h1 className="text-4xl sm:text-5xl font-bold gradient-text mb-4">
-            {settings?.site_name || 'Tsanaae Game'}
+        {/* Hero 搜索区 */}
+        <section className="py-12 md:py-20 text-center">
+          <h1 className="text-3xl md:text-5xl font-bold gradient-text mb-4">
+            发现你所需的一切
           </h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            {settings?.site_description || '精选优质游戏资源，发现你的下一款游戏'}
+          <p className="text-muted-foreground text-sm md:text-base mb-8 max-w-lg mx-auto">
+            学习资料 · 影视剧 · 音乐 · 游戏 · 小说 · 实用软件 — 一站式资源库
           </p>
-        </section>
-
-        {/* Hot Tags */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">热门搜索</h2>
-          </div>
-          <HotTags />
-        </section>
-
-        {/* Category Navigation */}
-        <CategoryNav />
-
-        {/* User Actions Banner */}
-        {!user ? <UserBanner /> : <LoggedInBanner user={user} />}
-
-        {/* Featured Games / 编辑精选 */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <span>⭐</span> 编辑精选
-            </h2>
-          </div>
-          <FeaturedGames />
-        </section>
-
-        {/* Collections / 游戏合集入口 */}
-        <section className="mb-10">
-          <CollectionPreview />
-        </section>
-
-        {/* Latest Games */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <span>🔥</span> 最新发布
-            </h2>
-          </div>
-          <GameGrid />
-          </section>
-
-      </main>
-
-      <FooterSection siteName={settings?.site_name || 'Tsanaae Game'} footerText={settings?.site_footer_text || '© 2025 Tsanaae Game. 精选优质游戏资源导航'} />
-    </div>
-  );
-}
-
-// Sub-components
-function CategoryNav() {
-  return (
-    <section className="mb-10">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {[
-          { href: '/games/pc', icon: '🖥️', name: '电脑游戏', desc: '精选PC游戏资源' },
-          { href: '/games/mobile', icon: '📱', name: '手机游戏', desc: '精选手机游戏资源' },
-          { href: '/games/web', icon: '🌐', name: '网页游戏', desc: '即开即玩不下载' },
-        ].map(cat => (
-          <Link
-            key={cat.href}
-            href={cat.href}
-            className="flex items-center gap-3 rounded-xl border border-border/50 bg-card p-4 hover:border-primary/30 hover:bg-card/80 transition-all group"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-xl">
-              {cat.icon}
-            </div>
-            <div>
-              <div className="font-semibold text-foreground group-hover:text-primary transition-colors">{cat.name}</div>
-              <div className="text-xs text-muted-foreground">{cat.desc}</div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function UserBanner() {
-  return (
-    <section className="mb-10">
-      <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-bold text-foreground mb-1">加入 Tsanaae Game 社区</h3>
-          <p className="text-sm text-muted-foreground">注册账号即可每日签到赚积分，解锁更多游戏资源</p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <Link href="/register" className="rounded-xl px-6 py-2.5 text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors">
-            免费注册
-          </Link>
-          <Link href="/login" className="rounded-xl px-6 py-2.5 text-sm font-medium text-foreground border border-border hover:bg-secondary/50 transition-colors">
-            已有账号？登录
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function LoggedInBanner({ user }: { user: UserInfo }) {
-  return (
-    <section className="mb-10">
-      <div className="rounded-2xl border border-border/50 bg-card p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-primary text-lg font-bold">
-              {user.nickname.charAt(0)}
-            </div>
-            <div>
-              <p className="font-semibold text-foreground">{user.nickname}</p>
-              <p className="text-sm text-yellow-500">积分: {user.points}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/profile" className="rounded-xl px-5 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 transition-colors">
-              每日签到
-            </Link>
-            <Link href="/profile" className="rounded-xl px-5 py-2 text-sm font-medium text-foreground border border-border hover:bg-secondary/50 transition-colors">
-              个人中心
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FeaturedGames() {
-  const [games, setGames] = useState<Game[]>([]);
-
-  useEffect(() => {
-    fetch('/api/games?featured=true&limit=4')
-      .then(res => res.json())
-      .then(data => setGames(data.games || []))
-      .catch(() => {});
-  }, []);
-
-  if (games.length === 0) return null;
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {games.map((game) => (
-        <Link
-          key={game.id}
-          href={`/game/${game.id}`}
-          className="group relative rounded-2xl overflow-hidden border border-border/50 bg-card hover:border-primary/30 transition-all"
-        >
-          <div className="aspect-video relative overflow-hidden">
-            {game.cover_image && (
-              <img
-                src={game.cover_image}
-                alt={game.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          <form onSubmit={handleSearch} className="max-w-xl mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="搜索你想要的资源..."
+                className="w-full h-12 rounded-2xl bg-white/5 border border-border pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
               />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            <div className="absolute bottom-3 left-3 right-3">
-              <h3 className="text-sm font-bold text-white truncate">{game.title}</h3>
-              <p className="text-xs text-white/60 mt-0.5">
-                👍 {game.likes} · ⭐ {game.avg_rating || '-'}
-              </p>
-            </div>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-function CollectionPreview() {
-  const [collections, setCollections] = useState<Collection[]>([]);
-
-  useEffect(() => {
-    fetch('/api/collections')
-      .then(res => res.json())
-      .then(data => setCollections((data.collections || []).slice(0, 3)))
-      .catch(() => {});
-  }, []);
-
-  if (collections.length === 0) return null;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <span>📚</span> 游戏合集
-        </h2>
-        <Link href="/collections" className="text-sm text-primary hover:underline">查看全部 →</Link>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {collections.map((col) => (
-          <div
-            key={col.id}
-            className="rounded-2xl border border-border/50 bg-card p-4 hover:border-primary/30 transition-all cursor-pointer group"
-            onClick={() => window.location.href = `/collections`}
-          >
-            <div className="flex items-center gap-3">
-              {col.cover_image ? (
-                <img src={col.cover_image} alt="" className="w-12 h-12 rounded-xl object-cover" />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-xl">📚</div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate">{col.title}</p>
-                <p className="text-xs text-muted-foreground">{col.games?.length || 0} 款游戏</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function FooterSection({ siteName, footerText }: { siteName: string; footerText: string }) {
-  return (
-    <footer className="border-t border-border/50 mt-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3" />
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <span className="text-sm font-semibold gradient-text">{siteName}</span>
+          </form>
+        </section>
+
+        {/* 资源类型快捷入口 */}
+        <section className="mb-12">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            {(Object.entries(RESOURCE_TYPES) as [ResourceType, typeof RESOURCE_TYPES[ResourceType]][]).map(([key, config]) => (
+              <Link
+                key={key}
+                href={`/resources/${key}`}
+                className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 transition-all"
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform"
+                  style={{ background: `linear-gradient(135deg, ${config.color}33, ${config.color}11)` }}
+                >
+                  {config.icon}
+                </div>
+                <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                  {config.label}
+                </span>
+              </Link>
+            ))}
           </div>
-          <p className="text-xs text-muted-foreground">{footerText}</p>
+        </section>
+
+        {/* 精选资源 */}
+        {featured.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                编辑精选
+              </h2>
+              <Link href="/resources/all" className="text-xs text-muted-foreground hover:text-primary transition-colors">查看全部 →</Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {featured.map(r => <ResourceCard key={r.id} resource={r} />)}
+            </div>
+          </section>
+        )}
+
+        {/* 各分类最新资源 */}
+        {categoryGroups.filter(g => g.resources.length > 0).map(group => {
+          const config = RESOURCE_TYPES[group.type];
+          return (
+            <section key={group.type} className="mb-12">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <span
+                    className="w-1 h-5 rounded-full"
+                    style={{ backgroundColor: config.color }}
+                  />
+                  最新{config.label}
+                </h2>
+                <Link href={`/resources/${group.type}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  更多 →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {group.resources.map(r => <ResourceCard key={r.id} resource={r} />)}
+              </div>
+            </section>
+          );
+        })}
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-border bg-background mt-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Tsanaae. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground/50">Powered by Tsanaae</p>
         </div>
       </div>
     </footer>

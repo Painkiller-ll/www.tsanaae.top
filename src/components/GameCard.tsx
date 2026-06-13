@@ -48,14 +48,18 @@ export default function GameCard({ game }: GameCardProps) {
           </h3>
           <div className="mt-2 flex items-center justify-between">
             <div className="flex flex-wrap gap-1">
-              {game.tags?.slice(0, 3).map((tag) => (
-                <span
-                  key={tag.id}
-                  className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary/80 border border-primary/10"
-                >
-                  {tag.name}
-                </span>
-              ))}
+              {game.tags?.slice(0, 3).map((tag, i) => {
+                const tagName = typeof tag === 'string' ? tag : tag.name;
+                const tagId = typeof tag === 'string' ? i : tag.id;
+                return (
+                  <span
+                    key={tagId}
+                    className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary/80 border border-primary/10"
+                  >
+                    {tagName}
+                  </span>
+                );
+              })}
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">

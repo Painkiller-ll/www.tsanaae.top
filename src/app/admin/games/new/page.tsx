@@ -34,7 +34,7 @@ export default function NewGamePage() {
     platform: 'pc',
     video_url: '',
     download_url: '',
-    download_links: [] as { label: string; url: string; type: string }[],
+    download_links: [] as { title: string; url: string; platform: string }[],
     screenshots: [] as string[],
     is_featured: false,
     unlock_points: 0,
@@ -105,7 +105,7 @@ export default function NewGamePage() {
         delete body.download_url;
       }
       if (form.download_links && form.download_links.length > 0) {
-        body.download_links = form.download_links.filter((l: { label: string; url: string }) => l.url);
+        body.download_links = form.download_links.filter((l: { title: string; url: string }) => l.url);
       } else {
         delete body.download_links;
       }
@@ -364,10 +364,10 @@ export default function NewGamePage() {
             <div key={idx} className="flex gap-2 items-center">
               <input
                 type="text"
-                value={link.label}
+                value={link.title}
                 onChange={(e) => {
                   const links = [...form.download_links];
-                  links[idx] = { ...links[idx], label: e.target.value };
+                  links[idx] = { ...links[idx], title: e.target.value };
                   setForm({ ...form, download_links: links });
                 }}
                 placeholder="名称（如：百度网盘）"
@@ -385,10 +385,10 @@ export default function NewGamePage() {
                 className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <select
-                value={link.type}
+                value={link.platform || ''}
                 onChange={(e) => {
                   const links = [...form.download_links];
-                  links[idx] = { ...links[idx], type: e.target.value };
+                  links[idx] = { ...links[idx], platform: e.target.value };
                   setForm({ ...form, download_links: links });
                 }}
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -413,7 +413,7 @@ export default function NewGamePage() {
           ))}
           <button
             type="button"
-            onClick={() => setForm({ ...form, download_links: [...form.download_links, { label: '', url: '', type: 'netdisk' }] })}
+            onClick={() => setForm({ ...form, download_links: [...form.download_links, { title: '', url: '', platform: 'netdisk' }] })}
             className="text-sm text-primary hover:underline"
           >
             + 添加下载链接

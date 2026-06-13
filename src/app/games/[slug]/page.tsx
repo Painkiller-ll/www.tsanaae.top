@@ -31,7 +31,7 @@ export default function CategoryPage() {
   const slug = params.slug as string;
   const [games, setGames] = useState<Game[]>([]);
   const [tags, setTags] = useState<GameTag[]>([]);
-  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<number|string>('');
   const [loading, setLoading] = useState(true);
 
   const categoryId = SLUG_TO_CATEGORY[slug] || '';

@@ -15,7 +15,7 @@ interface DownloadLink {
   type: string;
 }
 
-function RelatedGames({ categoryId, currentGameId, tags }: { categoryId: string; currentGameId: string; tags: { id: string; name: string }[] }) {
+function RelatedGames({ categoryId, currentGameId, tags }: { categoryId: number | string; currentGameId: string; tags: string[] | Array<{ id: number | string; name: string }> }) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +25,7 @@ function RelatedGames({ categoryId, currentGameId, tags }: { categoryId: string;
         const res = await fetch(`/api/games?category=${categoryId}&limit=6`);
         if (res.ok) {
           const data = await res.json();
-          const filtered = (data.games || []).filter((g: Game) => g.id !== currentGameId).slice(0, 4);
+          const filtered = (data.games || []).filter((g: Game) => g.id !== Number(currentGameId)).slice(0, 4);
           setGames(filtered);
         }
       } catch {
@@ -46,7 +46,7 @@ function RelatedGames({ categoryId, currentGameId, tags }: { categoryId: string;
         <Link key={g.id} href={`/game/${g.id}`} className="group">
           <div className="bg-card rounded-lg overflow-hidden border border-border hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5">
             <div className="aspect-video overflow-hidden">
-              <img src={g.cover_image} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              <img src={g.cover_image || g.cover_url || ''} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
             </div>
             <div className="p-2.5">
               <h3 className="text-xs font-medium text-foreground truncate">{g.title}</h3>
@@ -436,11 +436,15 @@ export default function GameDetailPage() {
             {/* Tags */}
             {game.tags && game.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {game.tags.map((tag) => (
-                  <Link key={tag.id} href={`/search?tag=${encodeURIComponent(tag.name)}`} className="tag-pill">
-                    {tag.name}
-                  </Link>
-                ))}
+                {game.tags.map((tag, i) => {
+                  const tagName = typeof tag === 'string' ? tag : tag.name;
+                  const tagId = typeof tag === 'string' ? i : tag.id;
+                  return (
+                    <Link key={tagId} href={`/search?tag=${encodeURIComponent(tagName)}`} className="tag-pill">
+                      {tagName}
+                    </Link>
+                  );
+                })}
               </div>
             )}
 
@@ -692,7 +696,7 @@ export default function GameDetailPage() {
         {/* 相关推荐 */}
         <section className="mt-8">
           <h2 className="text-lg font-bold text-foreground mb-4">相关推荐</h2>
-          <RelatedGames categoryId={game.category_id} currentGameId={game.id} tags={game.tags || []} />
+          <RelatedGames categoryId={game.category_id} currentGameId={String(game.id)} tags={game.tags || []} />
         </section>
       </main>
 

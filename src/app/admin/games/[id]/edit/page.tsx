@@ -332,20 +332,20 @@ export default function EditGamePage() {
             <div key={idx} className="flex gap-2 items-start">
               <input
                 type="text"
-                value={link.label}
+                value={link.title}
                 onChange={(e) => {
                   const newLinks = [...form.download_links!];
-                  newLinks[idx] = { ...newLinks[idx], label: e.target.value };
+                  newLinks[idx] = { ...newLinks[idx], title: e.target.value };
                   setForm({ ...form, download_links: newLinks });
                 }}
                 placeholder="名称（如：百度网盘）"
                 className="w-1/4 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <select
-                value={link.type}
+                value={link.platform || ''}
                 onChange={(e) => {
                   const newLinks = [...form.download_links!];
-                  newLinks[idx] = { ...newLinks[idx], type: e.target.value };
+                  newLinks[idx] = { ...newLinks[idx], platform: e.target.value };
                   setForm({ ...form, download_links: newLinks });
                 }}
                 className="w-1/4 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -378,7 +378,7 @@ export default function EditGamePage() {
           ))}
           <button
             type="button"
-            onClick={() => setForm({ ...form, download_links: [...(form.download_links || []), { label: '', url: '', type: 'pan' }] })}
+            onClick={() => setForm({ ...form, download_links: [...(form.download_links || []), { title: '', url: '', platform: 'pan', is_free: true, sort_order: 0, resource_id: 0, id: 0 } as any] })}
             className="text-sm text-primary hover:text-primary/80 transition-colors"
           >+ 添加下载链接</button>
         </div>
