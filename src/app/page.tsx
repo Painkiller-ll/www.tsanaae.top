@@ -3,33 +3,56 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import RightSidebar from '@/components/RightSidebar';
 import AnnouncementBar from '@/components/AnnouncementBar';
 import ResourceCard from '@/components/ResourceCard';
-import { RESOURCE_TYPES, type Resource, type ResourceType } from '@/lib/types';
+import { DEFAULT_RESOURCE_TYPES, type Resource, type ResourceCategory } from '@/lib/types';
 
 interface CategoryGroup {
-  type: ResourceType;
+  category: ResourceCategory;
   resources: Resource[];
 }
 
 export default function HomePage() {
   const [featured, setFeatured] = useState<Resource[]>([]);
+  const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     // 获取精选资源
     fetch('/api/resources?featured=true&limit=8').then(r => r.json()).then(d => { if (d.data) setFeatured(d.data); }).catch(() => {});
-    // 获取各分类最新
-    const types: ResourceType[] = ['study', 'movie', 'music', 'game', 'novel', 'software'];
-    Promise.all(types.map(t => fetch(`/api/resources?type=${t}&limit=6`).then(r => r.json()).then(d => ({ type: t, resources: d.data || [] })))).then(groups => setCategoryGroups(groups));
+    // 获取顶级分类
+    fetch('/api/resource-categories?top_level=true').then(r => r.json()).then(d => {
+      const cats: ResourceCategory[] = d.data || [];
+      setCategories(cats);
+      // 获取各分类最新资源
+      if (cats.length > 0) {
+        Promise.all(
+          cats.map(cat =>
+            fetch(`/api/resources?type=${cat.slug}&limit=6`)
+              .then(r => r.json())
+              .then(d => ({ category: cat, resources: d.data || [] }))
+          )
+        ).then(groups => setCategoryGroups(groups));
+      }
+    }).catch(() => {});
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
+  };
+
+  // 获取分类的样式
+  const getCategoryStyle = (cat: ResourceCategory) => {
+    const defaults = DEFAULT_RESOURCE_TYPES[cat.slug];
+    if (defaults) return defaults;
+    return {
+      label: cat.name,
+      icon: cat.icon || '📁',
+      color: '#6366f1',
+      gradient: 'from-indigo-500 to-indigo-700',
+    };
   };
 
   return (
@@ -46,7 +69,7 @@ export default function HomePage() {
             发现你所需的一切
           </h1>
           <p className="text-muted-foreground text-sm md:text-base mb-8 max-w-lg mx-auto">
-            学习资料 · 影视剧 · 音乐 · 游戏 · 小说 · 实用软件 — 一站式资源库
+            {categories.map(c => c.name).join(' · ')} — 一站式资源库
           </p>
           <form onSubmit={handleSearch} className="max-w-xl mx-auto">
             <div className="relative">
@@ -64,26 +87,29 @@ export default function HomePage() {
           </form>
         </section>
 
-        {/* 资源类型快捷入口 */}
+        {/* 资源类型快捷入口 - 动态从数据库读取 */}
         <section className="mb-12">
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-            {(Object.entries(RESOURCE_TYPES) as [ResourceType, typeof RESOURCE_TYPES[ResourceType]][]).map(([key, config]) => (
-              <Link
-                key={key}
-                href={`/resources/${key}`}
-                className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 transition-all"
-              >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform"
-                  style={{ background: `linear-gradient(135deg, ${config.color}33, ${config.color}11)` }}
+          <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 6)}, 1fr)` }}>
+            {categories.map((cat) => {
+              const style = getCategoryStyle(cat);
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/resources/${cat.slug}`}
+                  className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 transition-all"
                 >
-                  {config.icon}
-                </div>
-                <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                  {config.label}
-                </span>
-              </Link>
-            ))}
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform"
+                    style={{ background: `linear-gradient(135deg, ${style.color}33, ${style.color}11)` }}
+                  >
+                    {style.icon}
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    {cat.name}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
@@ -103,20 +129,20 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* 各分类最新资源 */}
+        {/* 各分类最新资源 - 动态渲染 */}
         {categoryGroups.filter(g => g.resources.length > 0).map(group => {
-          const config = RESOURCE_TYPES[group.type];
+          const style = getCategoryStyle(group.category);
           return (
-            <section key={group.type} className="mb-12">
+            <section key={group.category.id} className="mb-12">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <span
                     className="w-1 h-5 rounded-full"
-                    style={{ backgroundColor: config.color }}
+                    style={{ backgroundColor: style.color }}
                   />
-                  最新{config.label}
+                  最新{group.category.name}
                 </h2>
-                <Link href={`/resources/${group.type}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                <Link href={`/resources/${group.category.slug}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
                   更多 →
                 </Link>
               </div>
@@ -127,10 +153,6 @@ export default function HomePage() {
           );
         })}
       </main>
-
-      <Footer />
     </div>
   );
 }
-
-

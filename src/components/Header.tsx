@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { RESOURCE_TYPES, type ResourceType } from '@/lib/types';
+import { DEFAULT_RESOURCE_TYPES, type ResourceCategory } from '@/lib/types';
 import { useTheme } from '@/components/ThemeProvider';
 
 interface HeaderProps {
@@ -17,6 +17,7 @@ export default function Header({ onOpenAuth }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
+  const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<{ id: string; username: string; points: number; level: number } | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -24,6 +25,10 @@ export default function Header({ onOpenAuth }: HeaderProps) {
 
   useEffect(() => {
     fetch('/api/site-settings').then(r => r.json()).then(d => { if (d.data) setSiteInfo(d.data); }).catch(() => {});
+    // 从API获取顶级分类
+    fetch('/api/resource-categories?top_level=true').then(r => r.json()).then(d => {
+      if (d.data && d.data.length > 0) setCategories(d.data);
+    }).catch(() => {});
     const token = localStorage.getItem('user_token');
     if (token) {
       fetch('/api/user/profile', { headers: { 'x-session': token } }).then(r => r.json()).then(d => { if (d.data) setUser(d.data); }).catch(() => {});
@@ -52,6 +57,18 @@ export default function Header({ onOpenAuth }: HeaderProps) {
 
   const siteName = siteInfo?.site_name || 'Tsanaae';
 
+  // 获取分类的图标和颜色
+  const getCategoryStyle = (cat: ResourceCategory) => {
+    const defaults = DEFAULT_RESOURCE_TYPES[cat.slug];
+    if (defaults) return defaults;
+    return {
+      label: cat.name,
+      icon: cat.icon || '📁',
+      color: '#6366f1',
+      gradient: 'from-indigo-500 to-indigo-700',
+    };
+  };
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -66,18 +83,21 @@ export default function Header({ onOpenAuth }: HeaderProps) {
             <span className="text-base font-bold gradient-text hidden sm:inline">{siteName}</span>
           </Link>
 
-          {/* 资源类型导航 */}
+          {/* 资源类型导航 - 从数据库动态读取 */}
           <nav className="hidden lg:flex items-center gap-1">
-            {(Object.entries(RESOURCE_TYPES) as [ResourceType, typeof RESOURCE_TYPES[ResourceType]][]).map(([key, config]) => (
-              <Link
-                key={key}
-                href={`/resources/${key}`}
-                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/5 transition-colors flex items-center gap-1.5"
-              >
-                <span>{config.icon}</span>
-                <span>{config.label}</span>
-              </Link>
-            ))}
+            {categories.map((cat) => {
+              const style = getCategoryStyle(cat);
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/resources/${cat.slug}`}
+                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/5 transition-colors flex items-center gap-1.5"
+                >
+                  <span>{style.icon}</span>
+                  <span>{cat.name}</span>
+                </Link>
+              );
+            })}
           </nav>
 
           {/* 搜索框 */}
@@ -149,17 +169,20 @@ export default function Header({ onOpenAuth }: HeaderProps) {
         {/* 手机端下拉菜单 */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-border py-2 space-y-1">
-            {(Object.entries(RESOURCE_TYPES) as [ResourceType, typeof RESOURCE_TYPES[ResourceType]][]).map(([key, config]) => (
-              <Link
-                key={key}
-                href={`/resources/${key}`}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/5"
-              >
-                <span>{config.icon}</span>
-                <span>{config.label}</span>
-              </Link>
-            ))}
+            {categories.map((cat) => {
+              const style = getCategoryStyle(cat);
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/resources/${cat.slug}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/5"
+                >
+                  <span>{style.icon}</span>
+                  <span>{cat.name}</span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

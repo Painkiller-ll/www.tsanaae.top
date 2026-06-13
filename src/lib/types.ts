@@ -1,8 +1,8 @@
-// 资源类型枚举
-export type ResourceType = 'study' | 'movie' | 'music' | 'game' | 'novel' | 'software';
+// 资源类型 - 动态从数据库获取，这里仅作参考值
+export type ResourceType = string;
 
-// 资源类型配置
-export const RESOURCE_TYPES: Record<ResourceType, { label: string; icon: string; color: string; gradient: string }> = {
+// 资源类型默认配置（仅当数据库没有配置时使用）
+export const DEFAULT_RESOURCE_TYPES: Record<string, { label: string; icon: string; color: string; gradient: string }> = {
   study: { label: '学习资料', icon: '📚', color: '#3b82f6', gradient: 'from-blue-500 to-blue-700' },
   movie: { label: '影视剧', icon: '🎬', color: '#ef4444', gradient: 'from-red-500 to-red-700' },
   music: { label: '音乐', icon: '🎵', color: '#ec4899', gradient: 'from-pink-500 to-pink-700' },
@@ -10,6 +10,9 @@ export const RESOURCE_TYPES: Record<ResourceType, { label: string; icon: string;
   novel: { label: '小说', icon: '📖', color: '#10b981', gradient: 'from-emerald-500 to-emerald-700' },
   software: { label: '实用软件', icon: '💻', color: '#f59e0b', gradient: 'from-amber-500 to-amber-700' },
 };
+
+// 保留 RESOURCE_TYPES 作为别名兼容
+export const RESOURCE_TYPES = DEFAULT_RESOURCE_TYPES;
 
 // 资源分类
 export interface ResourceCategory {

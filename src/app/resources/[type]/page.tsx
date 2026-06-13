@@ -1,23 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import ResourceCard from '@/components/ResourceCard';
-import { RESOURCE_TYPES, type Resource, type ResourceType, type ResourceCategory } from '@/lib/types';
+import { DEFAULT_RESOURCE_TYPES, type Resource, type ResourceCategory } from '@/lib/types';
 
 const PAGE_SIZE = 12;
 
 export default function ResourcesByTypePage() {
   const params = useParams();
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const type = params.type as string;
-  const typeConfig = RESOURCE_TYPES[type as ResourceType];
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
+  const [currentCategory, setCurrentCategory] = useState<ResourceCategory | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
@@ -27,6 +25,15 @@ export default function ResourcesByTypePage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   useEffect(() => {
+    // 获取当前分类信息
+    fetch('/api/resource-categories?top_level=true')
+      .then(r => r.json())
+      .then(d => {
+        const cat = (d.data || []).find((c: ResourceCategory) => c.slug === type);
+        if (cat) setCurrentCategory(cat);
+      })
+      .catch(() => {});
+    // 获取子分类
     fetch(`/api/resource-categories?type=${type}`)
       .then(r => r.json())
       .then(d => { if (d.data) setCategories(d.data.filter((c: ResourceCategory) => c.parent_id !== null)); })
@@ -63,26 +70,25 @@ export default function ResourcesByTypePage() {
     setPage(1);
   };
 
-  if (!typeConfig) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="mx-auto max-w-7xl px-4 py-12 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">未知资源类型</h1>
-          <a href="/" className="text-primary hover:underline">返回首页</a>
-        </main>
-      </div>
-    );
-  }
+  // 获取分类样式
+  const getStyle = () => {
+    if (currentCategory) {
+      const defaults = DEFAULT_RESOURCE_TYPES[currentCategory.slug];
+      if (defaults) return defaults;
+    }
+    return { label: currentCategory?.name || type, icon: currentCategory?.icon || '📁', color: '#6366f1', gradient: 'from-indigo-500 to-indigo-700' };
+  };
+
+  const style = getStyle();
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <PageHeader
-          title={typeConfig.label}
-          icon={typeConfig.icon}
-          breadcrumbs={[{ label: '首页', href: '/' }, { label: typeConfig.label }]}
+          title={style.label}
+          icon={style.icon}
+          breadcrumbs={[{ label: '首页', href: '/' }, { label: style.label }]}
         />
 
         {/* 子分类筛选 */}
@@ -162,25 +168,23 @@ export default function ResourcesByTypePage() {
                 >
                   上一页
                 </button>
-                
-                {generatePageNumbers(page, totalPages).map((p, i) => (
-                  p === '...' ? (
-                    <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">...</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p as number)}
-                      className={`w-8 h-8 rounded-lg text-sm transition-colors ${
-                        page === p
-                          ? 'bg-primary text-white'
-                          : 'bg-white/5 border border-border text-muted-foreground hover:text-foreground hover:bg-white/10'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  )
-                ))}
-
+                <div className="flex gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                    .map((p, i, arr) => (
+                      <span key={p} className="flex items-center">
+                        {i > 0 && arr[i - 1] !== p - 1 && <span className="px-1 text-muted-foreground text-xs">...</span>}
+                        <button
+                          onClick={() => setPage(p)}
+                          className={`w-8 h-8 rounded-lg text-sm transition-colors ${
+                            page === p ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </span>
+                    ))}
+                </div>
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
@@ -193,31 +197,11 @@ export default function ResourcesByTypePage() {
           </>
         ) : (
           <div className="text-center py-20">
-            <span className="text-4xl mb-4 block">{typeConfig.icon}</span>
-            <p className="text-muted-foreground">暂无{typeConfig.label}资源</p>
-            <p className="text-xs text-muted-foreground/50 mt-1">管理员可在后台添加</p>
+            <p className="text-4xl mb-4">📭</p>
+            <p className="text-muted-foreground">暂无该分类的资源</p>
           </div>
         )}
       </main>
     </div>
   );
-}
-
-function generatePageNumbers(current: number, total: number): (number | string)[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  
-  const pages: (number | string)[] = [1];
-  
-  if (current > 3) pages.push('...');
-  
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  
-  for (let i = start; i <= end; i++) pages.push(i);
-  
-  if (current < total - 2) pages.push('...');
-  
-  pages.push(total);
-  
-  return pages;
 }
