@@ -62,24 +62,32 @@ export default function ResourceForm({ mode, resourceId }: Props) {
       async function load() {
         try {
           const res = await fetch(`/api/resources/${resourceId}`);
-          const data = await safeJson<{ resource?: Record<string, any> }>(res);
-          if (data.resource) {
-            const r = data.resource;
+          const result = await safeJson<Record<string, any>>(res);
+          // API returns { data: { ...resource } }
+          const r = result.data || result.resource || result;
+          if (r && typeof r === 'object') {
             setTitle(r.title || '');
             setDescription(r.description || '');
             setCoverUrl(r.cover_url || '');
             setResourceType(r.resource_type || 'game');
             setCategoryId(r.category_id || null);
             setAuthor(r.author || '');
-            setTags((r.tags || []).join(', '));
+            setTags(Array.isArray(r.tags) ? r.tags.join(', ') : (r.tags || ''));
             setUnlockPoints(r.unlock_points || 0);
             setIsFeatured(r.is_featured || false);
             setIsPublished(r.is_published ?? true);
-            setDownloadLinks(
-              r.download_links?.length > 0
-                ? r.download_links
-                : [{ title: '下载链接1', url: '', platform: '', is_free: true }]
-            );
+            // download_links from resource_downloads table or extra_data
+            const links = r.download_links || r.downloads || [];
+            if (Array.isArray(links) && links.length > 0) {
+              setDownloadLinks(
+                links.map((l: Record<string, any>) => ({
+                  title: l.title || l.name || '',
+                  url: l.url || '',
+                  platform: l.platform || '',
+                  is_free: l.is_free ?? true,
+                }))
+              );
+            }
             if (r.extra_data && typeof r.extra_data === 'object') {
               const ed: Record<string, string> = {};
               for (const [k, v] of Object.entries(r.extra_data)) {
@@ -88,7 +96,9 @@ export default function ResourceForm({ mode, resourceId }: Props) {
               setExtraData(ed);
             }
           }
-        } catch {}
+        } catch (err) {
+          console.error('Failed to load resource:', err);
+        }
       }
       load();
     }
