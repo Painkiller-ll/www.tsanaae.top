@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
 export async function GET() {
@@ -7,18 +7,26 @@ export async function GET() {
     const { data, error } = await supabase
       .from('resource_categories')
       .select('*')
-      .order('sort_order', { ascending: true });
+      .order('sort_order');
+
     if (error) throw error;
-    return NextResponse.json({ data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ categories: data || [] });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const { verifyToken } = await import('@/lib/admin-auth');
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token || !verifyToken(token)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = getSupabaseClient();
+    const body = await request.json();
 
     const { data, error } = await supabase
       .from('resource_categories')
@@ -34,8 +42,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ category: data });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,158 +1,95 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
-
-const navItems = [
+const NAV_ITEMS = [
   { href: '/admin', label: '仪表盘', icon: '📊' },
   { href: '/admin/resources', label: '资源管理', icon: '📦' },
-  { href: '/admin/categories', label: '分类管理', icon: '📁' },
+  { href: '/admin/resource-categories', label: '分类管理', icon: '📂' },
   { href: '/admin/tags', label: '标签管理', icon: '🏷️' },
-  { href: '/admin/comments', label: '评论管理', icon: '💬' },
   { href: '/admin/announcements', label: '公告管理', icon: '📢' },
-  { href: '/admin/shop', label: '商城管理', icon: '🛒' },
-  { href: '/admin/wishlist', label: '心愿单', icon: '🌟' },
-  { href: '/admin/music', label: '音乐管理', icon: '🎵' },
   { href: '/admin/faqs', label: 'FAQ管理', icon: '❓' },
+  { href: '/admin/music', label: '音乐管理', icon: '🎵' },
+  { href: '/admin/shop', label: '积分商城', icon: '🛒' },
   { href: '/admin/settings', label: '站点设置', icon: '⚙️' },
 ];
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const router = useRouter();
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/check');
-      const data = await res.json();
-      setAuthenticated(data.authenticated);
-      if (!data.authenticated && !pathname.includes('/login')) {
-        router.push('/admin/login');
-      }
-    } catch {
-      setAuthenticated(false);
-      router.push('/admin/login');
-    }
-  }, [router, pathname]);
-
-  useEffect(() => {
-    if (pathname.includes('/login')) {
-      setAuthenticated(true);
-      return;
-    }
-    checkAuth();
-  }, [pathname, checkAuth]);
-
-  const handleLogout = async () => {
-    await fetch('/api/admin/auth', { method: 'DELETE' });
-    router.push('/admin/login');
-  };
-
-  if (authenticated === null && !pathname.includes('/login')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">加载中...</div>
-      </div>
-    );
-  }
-
-  if (pathname.includes('/login')) {
+  // 登录页不显示侧边栏
+  if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
-  if (!authenticated) {
-    return null;
-  }
+  const handleLogout = () => {
+    document.cookie = 'admin_token=; path=/; max-age=0';
+    router.push('/admin/login');
+  };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarOpen ? 'w-56' : 'w-16'
-        } border-r border-border bg-card flex flex-col transition-all duration-200 shrink-0`}
-      >
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* 侧边栏 */}
+      <aside className={`${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-200 flex flex-col transition-all duration-200 shrink-0`}>
         {/* Logo */}
-        <div className="h-14 flex items-center px-4 border-b border-border">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-          </div>
-          {sidebarOpen && (
-            <span className="ml-2 font-semibold text-sm gradient-text whitespace-nowrap">管理后台</span>
-          )}
+        <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200">
+          {sidebarOpen && <span className="font-bold text-gray-800 text-lg">管理后台</span>}
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-500 hover:text-gray-700 p-1">
+            {sidebarOpen ? '◀' : '▶'}
+          </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 space-y-1 px-2">
-          {navItems.map((item) => {
+        {/* 导航 */}
+        <nav className="flex-1 py-2 overflow-y-auto">
+          {NAV_ITEMS.map(item => {
             const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                className={`flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-colors text-sm ${
                   isActive
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? 'bg-violet-50 text-violet-700 font-medium'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <span className="text-base shrink-0">{item.icon}</span>
-                {sidebarOpen && <span className="whitespace-nowrap">{item.label}</span>}
+                {sidebarOpen && <span>{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        {/* Bottom */}
-        <div className="border-t border-border p-2 space-y-1">
+        {/* 底部操作 */}
+        <div className="border-t border-gray-200 p-3">
           <Link
             href="/"
             target="_blank"
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 text-sm"
           >
-            <span className="text-base shrink-0">🌐</span>
-            {sidebarOpen && <span className="whitespace-nowrap">查看网站</span>}
+            <span>🌐</span>
+            {sidebarOpen && <span>查看网站</span>}
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 text-sm w-full"
           >
-            <span className="text-base shrink-0">🚪</span>
-            {sidebarOpen && <span className="whitespace-nowrap">退出登录</span>}
+            <span>🚪</span>
+            {sidebarOpen && <span>退出登录</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="h-14 border-b border-border flex items-center px-6 bg-card/50">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 p-6 overflow-auto">
+      {/* 主内容 */}
+      <main className="flex-1 overflow-auto">
+        <div className="p-6 max-w-7xl mx-auto">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
