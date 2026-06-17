@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import ResourceCard from '@/components/ResourceCard';
-import { RESOURCE_TYPES, type Resource, type ResourceType } from '@/lib/types';
+import { DEFAULT_RESOURCE_TYPES, type Resource, type ResourceType } from '@/lib/types';
 import { Suspense } from 'react';
 
 const PAGE_SIZE = 12;
@@ -53,7 +53,7 @@ function SearchContent() {
           >
             全部
           </button>
-          {(Object.entries(RESOURCE_TYPES) as [ResourceType, typeof RESOURCE_TYPES[ResourceType]][]).map(([key, config]) => (
+          {(Object.entries(DEFAULT_RESOURCE_TYPES) as [ResourceType, typeof DEFAULT_RESOURCE_TYPES[ResourceType]][]).map(([key, config]) => (
             <button
               key={key}
               onClick={() => handleTypeChange(key)}

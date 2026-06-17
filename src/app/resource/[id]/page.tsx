@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import ResourceCard from '@/components/ResourceCard';
-import { RESOURCE_TYPES, type Resource, type ResourceType, type Comment } from '@/lib/types';
+import { DEFAULT_RESOURCE_TYPES, type Resource, type ResourceType, type Comment } from '@/lib/types';
 
 export default function ResourceDetailPage() {
   const params = useParams();
@@ -115,7 +115,7 @@ export default function ResourceDetailPage() {
     );
   }
 
-  const typeConfig = RESOURCE_TYPES[resource.resource_type as ResourceType];
+  const typeConfig = DEFAULT_RESOURCE_TYPES[resource.resource_type as ResourceType];
   const extra = resource.extra_data as Record<string, string>;
 
   return (
