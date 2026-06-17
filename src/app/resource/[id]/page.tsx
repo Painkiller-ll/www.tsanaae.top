@@ -221,7 +221,7 @@ export default function ResourceDetailPage() {
             {Object.keys(extra).length > 0 && (
               <div className="p-5 rounded-xl bg-card border border-border">
                 <h2 className="text-sm font-semibold text-foreground mb-3">详细信息</h2>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {Object.entries(extra).map(([key, value]) => (
                     <div key={key}>
                       <span className="text-xs text-muted-foreground">{key}</span>
