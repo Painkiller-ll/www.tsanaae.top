@@ -11,14 +11,14 @@ export const DEFAULT_RESOURCE_TYPES: Record<string, { label: string; icon: strin
   software: { label: '实用软件', icon: '💻', color: '#f59e0b', gradient: 'from-amber-500 to-amber-700' },
 };
 
-// 资源类型默认封面图
+// 资源类型默认封面图（通过 /api/files/ 路由提供，确保生产环境可用）
 export const DEFAULT_COVERS: Record<string, string> = {
-  study: '/images/defaults/study.jpg',
-  movie: '/images/defaults/movie.jpg',
-  music: '/images/defaults/music.jpg',
-  game: '/images/defaults/game.jpg',
-  novel: '/images/defaults/novel.jpg',
-  software: '/images/defaults/software.jpg',
+  study: '/api/files/images/defaults/study.jpg',
+  movie: '/api/files/images/defaults/movie.jpg',
+  music: '/api/files/images/defaults/music.jpg',
+  game: '/api/files/images/defaults/game.jpg',
+  novel: '/api/files/images/defaults/novel.jpg',
+  software: '/api/files/images/defaults/software.jpg',
 };
 
 // 资源分类

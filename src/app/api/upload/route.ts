@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
     const filepath = path.join(uploadDir, filename);
     await writeFile(filepath, buffer);
 
-    // Return the public URL path
-    const url = `/uploads/${filename}`;
+    // Return the API-served URL path (guaranteed to work regardless of Nginx config)
+    const url = `/api/files/uploads/${filename}`;
 
     return NextResponse.json({ url, filename });
   } catch (error) {
