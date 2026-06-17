@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const NAV_ITEMS = [
   { href: '/admin', label: '仪表盘', icon: '📊' },
@@ -20,13 +20,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [checked, setChecked] = useState(false);
+
+  // 检查登录状态
+  useEffect(() => {
+    if (pathname !== '/admin/login') {
+      fetch('/api/admin/check', { credentials: 'include' }).then(res => {
+        if (!res.ok) router.push('/admin/login');
+        else setChecked(true);
+      }).catch(() => router.push('/admin/login'));
+      return;
+    }
+    setChecked(true);
+  }, [pathname, router]);
 
   // 登录页不显示侧边栏
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
+  if (!checked) {
+    return <div className="min-h-screen flex items-center justify-center">检查登录状态...</div>;
+  }
+
   const handleLogout = () => {
+    localStorage.removeItem('admin_token');
     document.cookie = 'admin_token=; path=/; max-age=0';
     router.push('/admin/login');
   };

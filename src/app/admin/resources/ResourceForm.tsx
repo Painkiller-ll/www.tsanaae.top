@@ -108,10 +108,10 @@ export default function ResourceForm({ mode, resourceId }: Props) {
       if (data.url) {
         setCoverUrl(data.url);
       } else {
-        alert(data.error || '上传失败');
+        alert(`上传失败: ${data.error || '未知错误'} (HTTP ${res.status})`);
       }
-    } catch {
-      alert('上传失败');
+    } catch (err) {
+      alert(`上传失败: ${err instanceof Error ? err.message : '网络错误'}`);
     } finally {
       setUploading(false);
     }
@@ -194,10 +194,12 @@ export default function ResourceForm({ mode, resourceId }: Props) {
       if (res.ok) {
         router.push('/admin/resources');
       } else {
-        alert(data.error || '保存失败');
+        alert(`保存失败: ${data.error || '未知错误'} (HTTP ${res.status})`);
+        console.error('Save failed:', res.status, data);
       }
-    } catch {
-      alert('保存失败');
+    } catch (err) {
+      alert(`保存失败: ${err instanceof Error ? err.message : '网络错误'}`);
+      console.error('Save error:', err);
     } finally {
       setSaving(false);
     }

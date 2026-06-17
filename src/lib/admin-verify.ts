@@ -30,8 +30,6 @@ async function verifyAdminRequest(request: Request): Promise<NextResponse | null
     } catch {}
   }
   
-  console.error('[admin-verify] All auth methods failed. Cookie header:', cookieHeader ? cookieHeader.substring(0, 100) : 'EMPTY');
-  
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 
