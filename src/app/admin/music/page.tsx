@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 interface MusicTrack {
   id: string;
@@ -32,7 +32,7 @@ export default function AdminMusicPage() {
   const fetchTracks = async () => {
     try {
       const res = await adminFetch('/api/admin/music');
-      const data = await res.json();
+      const data = await safeJson<{ tracks?: MusicTrack[] }>(res);
       setTracks(data.tracks || []);
     } catch {
       // ignore
@@ -59,10 +59,10 @@ export default function AdminMusicPage() {
       formData.append('sort_order', String(tracks.length));
 
       const res = await adminFetch('/api/admin/music', { method: 'POST', body: formData });
-      const data = await res.json();
+      const data = await safeJson<{ track?: MusicTrack; error?: string }>(res);
 
       if (data.track) {
-        setTracks(prev => [...prev, data.track]);
+        setTracks(prev => [...prev, data.track!]);
         setNewTitle('');
         setNewArtist('');
         setNewCover('');
@@ -84,7 +84,7 @@ export default function AdminMusicPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: track.id, is_active: !track.is_active }),
       });
-      const data = await res.json();
+      const data = await safeJson<{ track?: MusicTrack }>(res);
       if (data.track) {
         setTracks(prev => prev.map(t => t.id === track.id ? { ...t, is_active: !t.is_active } : t));
       }
@@ -96,7 +96,7 @@ export default function AdminMusicPage() {
   const deleteTrack = async (id: string) => {
     if (!confirm('确定删除这首曲目？')) return;
     try {
-      const res = await fetch(`/api/admin/music?id=${id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/music?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
         setTracks(prev => prev.filter(t => t.id !== id));
       }
@@ -112,7 +112,7 @@ export default function AdminMusicPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, [field]: value }),
       });
-      const data = await res.json();
+      const data = await safeJson<{ track?: MusicTrack }>(res);
       if (data.track) {
         setTracks(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
       }

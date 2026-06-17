@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 const TYPE_LABELS: Record<string, string> = {
   study: '学习资料', movie: '影视剧', music: '音乐',
@@ -29,12 +30,17 @@ export default function AdminResources() {
     if (typeFilter) params.set('resource_type', typeFilter);
     if (search) params.set('search', search);
 
-    const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
-    const res = await fetch(`/api/admin/resources?${params}`, { });
-    const data = await res.json();
-    setResources(data.resources || []);
-    setTotal(data.total || 0);
-    setLoading(false);
+    try {
+      const res = await adminFetch(`/api/admin/resources?${params}`);
+      const data = await safeJson<{ resources?: any[]; total?: number }>(res);
+      setResources(data.resources || []);
+      setTotal(data.total || 0);
+    } catch (err) {
+      console.error('Failed to load resources:', err);
+      setResources([]);
+    } finally {
+      setLoading(false);
+    }
   }, [page, typeFilter, search]);
 
   useEffect(() => { fetchResources(); }, [fetchResources]);
@@ -57,29 +63,47 @@ export default function AdminResources() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除此资源？')) return;
-    const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
-    await fetch(`/api/admin/resources/${id}`, { method: 'DELETE', });
-    fetchResources();
+    try {
+      const res = await adminFetch(`/api/admin/resources/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await safeJson<{ error?: string }>(res);
+        alert(`删除失败: ${data.error || '未知错误'}`);
+        return;
+      }
+      fetchResources();
+    } catch (err) {
+      alert(`删除失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
   };
 
   const handleBatchDelete = async () => {
     if (!confirm(`确定删除选中的 ${selected.size} 个资源？`)) return;
-    const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
-    await Promise.all([...selected].map(id =>
-      fetch(`/api/admin/resources/${id}`, { method: 'DELETE', })
-    ));
-    setSelected(new Set());
-    fetchResources();
+    try {
+      await Promise.all([...selected].map(id =>
+        adminFetch(`/api/admin/resources/${id}`, { method: 'DELETE' })
+      ));
+      setSelected(new Set());
+      fetchResources();
+    } catch (err) {
+      alert(`批量删除失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
   };
 
   const handleToggle = async (id: number, field: string, value: boolean) => {
-    const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
-    await fetch(`/api/admin/resources/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [field]: value }),
-    });
-    fetchResources();
+    try {
+      const res = await adminFetch(`/api/admin/resources/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) {
+        const data = await safeJson<{ error?: string }>(res);
+        alert(`操作失败: ${data.error || '未知错误'}`);
+        return;
+      }
+      fetchResources();
+    } catch (err) {
+      alert(`操作失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
   };
 
   return (

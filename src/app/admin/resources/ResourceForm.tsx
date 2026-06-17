@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DEFAULT_RESOURCE_TYPES, DEFAULT_COVERS } from '@/lib/types';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, adminFetchJSON, safeJson } from '@/lib/admin-fetch';
 import type { ResourceType } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
 
@@ -46,7 +46,7 @@ export default function ResourceForm({ mode, resourceId }: Props) {
     async function loadCategories() {
       try {
         const res = await fetch(`/api/resource-categories?top_level=true&resource_type=${resourceType}`);
-        const data = await res.json();
+        const data = await safeJson<{ categories?: { id: number; name: string }[] }>(res);
         if (data.categories) {
           setCategories(data.categories.map((c: { id: number; name: string }) => ({ id: c.id, name: c.name })));
           setCategoryId(null);
@@ -62,7 +62,7 @@ export default function ResourceForm({ mode, resourceId }: Props) {
       async function load() {
         try {
           const res = await fetch(`/api/resources/${resourceId}`);
-          const data = await res.json();
+          const data = await safeJson<{ resource?: Record<string, any> }>(res);
           if (data.resource) {
             const r = data.resource;
             setTitle(r.title || '');
@@ -103,12 +103,12 @@ export default function ResourceForm({ mode, resourceId }: Props) {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.url) {
+      const { ok, status, data } = await adminFetchJSON<{ url?: string; error?: string }>('/api/upload', { method: 'POST', body: formData });
+      if (ok && data.url) {
         setCoverUrl(data.url);
       } else {
-        alert(`上传失败: ${data.error || '未知错误'} (HTTP ${res.status})`);
+        const errData = data as { error?: string; raw?: string };
+        alert(`上传失败: ${errData.error || '未知错误'} (HTTP ${status})${errData.raw ? '\n原始响应: ' + errData.raw.substring(0, 200) : ''}`);
       }
     } catch (err) {
       alert(`上传失败: ${err instanceof Error ? err.message : '网络错误'}`);
@@ -185,17 +185,17 @@ export default function ResourceForm({ mode, resourceId }: Props) {
       const url = mode === 'edit' ? `/api/admin/resources/${resourceId}` : '/api/admin/resources';
       const method = mode === 'edit' ? 'PUT' : 'POST';
 
-      const res = await adminFetch(url, {
+      const { ok, status, data } = await adminFetchJSON<{ resource?: unknown; error?: string; raw?: string }>(url, {
         method,
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
-      if (res.ok) {
+      if (ok) {
         router.push('/admin/resources');
       } else {
-        alert(`保存失败: ${data.error || '未知错误'} (HTTP ${res.status})`);
-        console.error('Save failed:', res.status, data);
+        const errData = data as { error?: string; raw?: string };
+        alert(`保存失败: ${errData.error || '未知错误'} (HTTP ${status})${errData.raw ? '\n原始响应: ' + errData.raw.substring(0, 200) : ''}`);
+        console.error('Save failed:', status, data);
       }
     } catch (err) {
       alert(`保存失败: ${err instanceof Error ? err.message : '网络错误'}`);

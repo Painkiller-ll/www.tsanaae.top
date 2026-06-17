@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 interface ShopItem {
   id: string;
@@ -40,7 +40,7 @@ export default function AdminShopPage() {
     try {
       const res = await adminFetch('/api/admin/shop');
       if (res.ok) {
-        const data = await res.json();
+        const data = await safeJson<{ items?: ShopItem[] }>(res);
         setItems(data.items || []);
       }
     } catch {
@@ -66,9 +66,8 @@ export default function AdminShopPage() {
       const url = editingItem ? `/api/admin/shop/${editingItem.id}` : '/api/admin/shop';
       const method = editingItem ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
 
@@ -79,7 +78,7 @@ export default function AdminShopPage() {
         resetForm();
         fetchItems();
       } else {
-        const data = await res.json();
+        const data = await safeJson<{ error?: string }>(res);
         setMsg({ type: 'error', text: data.error || '操作失败' });
       }
     } catch {
@@ -93,7 +92,7 @@ export default function AdminShopPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除该商品？')) return;
     try {
-      const res = await fetch(`/api/admin/shop/${id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/shop/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setMsg({ type: 'success', text: '删除成功' });
         fetchItems();

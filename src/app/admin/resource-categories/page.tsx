@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 const TYPE_LABELS: Record<string, string> = {
   study: '学习资料', movie: '影视剧', music: '音乐',
@@ -24,55 +24,65 @@ export default function CategoryManagement() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: '', slug: '', resource_type: 'game', parent_id: '', icon: '', sort_order: 0 });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => { loadCategories(); }, [filterType]);
-
-  const getToken = () => document.cookie.split('admin_token=')[1]?.split(';')[0];
 
   const loadCategories = async () => {
     const params = filterType ? `?resource_type=${filterType}` : '';
     const res = await fetch(`/api/resource-categories${params}`);
-    const data = await res.json();
+    const data = await safeJson<{ categories?: Category[] }>(res);
     setCategories(data.categories || []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
     if (!form.name.trim() || !form.slug.trim()) return alert('名称和Slug必填');
+    setSubmitting(true);
 
-    if (editing) {
-      await fetch(`/api/admin/resource-categories/${editing.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          slug: form.slug,
-          resource_type: form.resource_type,
-          parent_id: form.parent_id ? parseInt(form.parent_id) : null,
-          icon: form.icon,
-          sort_order: form.sort_order,
-        }),
-      });
-    } else {
-      await adminFetch('/api/admin/resource-categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          slug: form.slug,
-          resource_type: form.resource_type,
-          parent_id: form.parent_id ? parseInt(form.parent_id) : null,
-          icon: form.icon,
-          sort_order: form.sort_order,
-        }),
-      });
+    try {
+      const body = {
+        name: form.name,
+        slug: form.slug,
+        resource_type: form.resource_type,
+        parent_id: form.parent_id ? parseInt(form.parent_id) : null,
+        icon: form.icon,
+        sort_order: form.sort_order,
+      };
+
+      if (editing) {
+        const res = await adminFetch(`/api/admin/resource-categories/${editing.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const data = await safeJson<{ error?: string }>(res);
+          alert(`修改失败: ${data.error || '未知错误'}`);
+          setSubmitting(false);
+          return;
+        }
+      } else {
+        const res = await adminFetch('/api/admin/resource-categories', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const data = await safeJson<{ error?: string }>(res);
+          alert(`创建失败: ${data.error || '未知错误'}`);
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      setShowForm(false);
+      setEditing(null);
+      setForm({ name: '', slug: '', resource_type: filterType || 'game', parent_id: '', icon: '', sort_order: 0 });
+      loadCategories();
+    } catch (err) {
+      alert(`操作失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    } finally {
+      setSubmitting(false);
     }
-
-    setShowForm(false);
-    setEditing(null);
-    setForm({ name: '', slug: '', resource_type: 'game', parent_id: '', icon: '', sort_order: 0 });
-    loadCategories();
   };
 
   const startEdit = (cat: Category) => {
@@ -90,11 +100,17 @@ export default function CategoryManagement() {
 
   const handleDelete = async (cat: Category) => {
     if (!confirm(`确定删除分类「${cat.name}」？其下子分类也会被删除！`)) return;
-    const token = getToken();
-    await fetch(`/api/admin/resource-categories/${cat.id}`, {
-      method: 'DELETE',
-      });
-    loadCategories();
+    try {
+      const res = await adminFetch(`/api/admin/resource-categories/${cat.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await safeJson<{ error?: string }>(res);
+        alert(`删除失败: ${data.error || '未知错误'}`);
+        return;
+      }
+      loadCategories();
+    } catch (err) {
+      alert(`删除失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
   };
 
   const topLevel = categories.filter(c => c.parent_id === null);
@@ -156,7 +172,7 @@ export default function CategoryManagement() {
               <input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-violet-500 outline-none" />
             </div>
             <div className="md:col-span-3 flex gap-3">
-              <button type="submit" className="px-5 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium">{editing ? '保存修改' : '创建'}</button>
+              <button type="submit" disabled={submitting} className="px-5 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium disabled:opacity-50">{submitting ? '提交中...' : editing ? '保存修改' : '创建'}</button>
               <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm">取消</button>
             </div>
           </form>

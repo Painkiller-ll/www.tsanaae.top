@@ -25,7 +25,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // 检查登录状态
   useEffect(() => {
     if (pathname !== '/admin/login') {
-      fetch('/api/admin/check', { credentials: 'include' }).then(res => {
+      const token = localStorage.getItem('admin_token');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      fetch('/api/admin/check', { credentials: 'include', headers }).then(res => {
         if (!res.ok) router.push('/admin/login');
         else setChecked(true);
       }).catch(() => router.push('/admin/login'));

@@ -31,6 +31,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Delegate to PATCH - some clients use PUT for updates
+  return PATCH(request, { params });
+}
+
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authErr = await verifyAdminRequest(request);

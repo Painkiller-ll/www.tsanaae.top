@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 export default function AdminFAQsPage() {
   const [faqs, setFaqs] = useState<Array<{ id: string; question: string; answer: string; sort_order: number; is_active: boolean }>>([]);
@@ -10,32 +10,39 @@ export default function AdminFAQsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const fetchFaqs = async () => {
-    const res = await adminFetch('/api/admin/faqs');
-    const data = await res.json();
-    setFaqs(data.faqs || []);
-    setLoading(false);
+    try {
+      const res = await adminFetch('/api/admin/faqs');
+      const data = await safeJson<{ faqs?: typeof faqs }>(res);
+      setFaqs(data.faqs || []);
+    } catch {
+      setFaqs([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchFaqs(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      await fetch(`/api/admin/faqs/${editingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-    } else {
-      await adminFetch('/api/admin/faqs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+    try {
+      if (editingId) {
+        await adminFetch(`/api/admin/faqs/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(form),
+        });
+      } else {
+        await adminFetch('/api/admin/faqs', {
+          method: 'POST',
+          body: JSON.stringify(form),
+        });
+      }
+      setForm({ question: '', answer: '', sort_order: 0, is_active: true });
+      setEditingId(null);
+      fetchFaqs();
+    } catch (err) {
+      alert(`保存失败: ${err instanceof Error ? err.message : '网络错误'}`);
     }
-    setForm({ question: '', answer: '', sort_order: 0, is_active: true });
-    setEditingId(null);
-    fetchFaqs();
   };
 
   const handleEdit = (faq: typeof faqs[0]) => {
@@ -45,17 +52,24 @@ export default function AdminFAQsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除此FAQ？')) return;
-    await fetch(`/api/admin/faqs/${id}`, { method: 'DELETE' });
-    fetchFaqs();
+    try {
+      await adminFetch(`/api/admin/faqs/${id}`, { method: 'DELETE' });
+      fetchFaqs();
+    } catch (err) {
+      alert(`删除失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
   };
 
   const toggleActive = async (faq: typeof faqs[0]) => {
-    await fetch(`/api/admin/faqs/${faq.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...faq, is_active: !faq.is_active }),
-    });
-    fetchFaqs();
+    try {
+      await adminFetch(`/api/admin/faqs/${faq.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...faq, is_active: !faq.is_active }),
+      });
+      fetchFaqs();
+    } catch (err) {
+      alert(`操作失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
   };
 
   const inputClass = 'w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-purple-500';

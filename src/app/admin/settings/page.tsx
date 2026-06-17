@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 interface Settings {
   site_name: string;
@@ -49,10 +49,10 @@ export default function AdminSettingsPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    adminFetch('/api/admin/check').then(r => r.json()).then(d => {
+    adminFetch('/api/admin/check').then(r => safeJson<{ authenticated?: boolean }>(r)).then(d => {
       if (!d.authenticated) router.push('/admin/login');
-    });
-    fetch('/api/site-settings').then(r => r.json()).then(d => setSettings(prev => ({ ...prev, ...d })));
+    }).catch(() => router.push('/admin/login'));
+    fetch('/api/site-settings').then(r => safeJson<Partial<Settings>>(r)).then(d => setSettings(prev => ({ ...prev, ...d }))).catch(() => {});
   }, [router]);
 
   const handleSave = async () => {
@@ -64,7 +64,7 @@ export default function AdminSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
-      const data = await res.json();
+      const data = await safeJson<{ error?: string }>(res);
       if (res.ok) {
         setMessage('保存成功');
       } else {

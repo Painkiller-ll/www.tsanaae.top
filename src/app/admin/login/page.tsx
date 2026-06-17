@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       });
 
-      const data = await res.json();
+      const data = await safeJson<{ token?: string; error?: string }>(res);
 
       if (res.ok && data.token) {
         localStorage.setItem('admin_token', data.token);

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 interface Announcement {
   id: string;
@@ -23,9 +22,6 @@ const typeOptions = [
 ];
 
 export default function AdminAnnouncementsPage() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [authenticated, setAuthenticated] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -40,33 +36,18 @@ export default function AdminAnnouncementsPage() {
     end_date: '',
   });
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const res = await adminFetch('/api/admin/check');
-      const data = await res.json();
-      setAuthenticated(data.authenticated);
-      if (!data.authenticated) router.push('/admin/login');
-    } catch {
-      router.push('/admin/login');
-    }
-  }, [router]);
-
-  useEffect(() => {
-    if (!pathname.includes('/login')) checkAuth();
-  }, [pathname, checkAuth]);
-
   const fetchAnnouncements = useCallback(async () => {
     try {
-      const res = await fetch('/api/announcements?all=true');
-      const data = await res.json();
+      const res = await adminFetch('/api/announcements?all=true');
+      const data = await safeJson<{ announcements?: Announcement[] }>(res);
       setAnnouncements(data.announcements || []);
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
-    if (authenticated) fetchAnnouncements();
-  }, [authenticated, fetchAnnouncements]);
+    fetchAnnouncements();
+  }, [fetchAnnouncements]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,9 +61,8 @@ export default function AdminAnnouncementsPage() {
         end_date: form.end_date || null,
       };
 
-      const res = await fetch('/api/announcements', {
+      const res = await adminFetch('/api/announcements', {
         method: editingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
 
@@ -91,9 +71,13 @@ export default function AdminAnnouncementsPage() {
         setEditingId(null);
         setForm({ title: '', content: '', type: 'info', is_active: true, start_date: '', end_date: '' });
         fetchAnnouncements();
+      } else {
+        const data = await safeJson<{ error?: string }>(res);
+        alert(`保存失败: ${data.error || '未知错误'}`);
       }
-    } catch { /* ignore */ }
-    finally { setSaving(false); }
+    } catch (err) {
+      alert(`保存失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    } finally { setSaving(false); }
   };
 
   const handleEdit = (announcement: Announcement) => {
@@ -112,23 +96,20 @@ export default function AdminAnnouncementsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除此公告？')) return;
     try {
-      await fetch(`/api/announcements?id=${id}`, { method: 'DELETE' });
+      await adminFetch(`/api/announcements?id=${id}`, { method: 'DELETE' });
       fetchAnnouncements();
     } catch { /* ignore */ }
   };
 
   const toggleActive = async (announcement: Announcement) => {
     try {
-      await fetch('/api/announcements', {
+      await adminFetch('/api/announcements', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: announcement.id, is_active: !announcement.is_active }),
       });
       fetchAnnouncements();
     } catch { /* ignore */ }
   };
-
-  if (!authenticated) return null;
 
   return (
     <div className="space-y-6">

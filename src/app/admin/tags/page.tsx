@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { adminFetch } from '@/lib/admin-fetch';
+import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
 interface Tag {
   id: string;
@@ -18,14 +18,8 @@ export default function AdminTagsPage() {
 
   const fetchTags = useCallback(async () => {
     try {
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('admin_token='))
-        ?.split('=')[1];
-
-      const res = await adminFetch('/api/admin/tags', {
-        });
-      const data = await res.json();
+      const res = await adminFetch('/api/admin/tags');
+      const data = await safeJson<{ tags?: Tag[] }>(res);
       setTags(data.tags || []);
     } catch {
       // ignore
@@ -44,21 +38,13 @@ export default function AdminTagsPage() {
 
     if (!newTagName.trim()) return;
 
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('admin_token='))
-      ?.split('=')[1];
-
     try {
       const res = await adminFetch('/api/admin/tags', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ name: newTagName.trim() }),
       });
 
-      const data = await res.json();
+      const data = await safeJson<{ error?: string }>(res);
       if (res.ok) {
         setNewTagName('');
         fetchTags();
@@ -73,17 +59,9 @@ export default function AdminTagsPage() {
   const handleUpdate = async (id: string) => {
     if (!editName.trim()) return;
 
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('admin_token='))
-      ?.split('=')[1];
-
     try {
-      const res = await fetch(`/api/admin/tags/${id}`, {
+      const res = await adminFetch(`/api/admin/tags/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ name: editName.trim() }),
       });
 
@@ -99,15 +77,8 @@ export default function AdminTagsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除此标签？关联的游戏标签也会被删除')) return;
 
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('admin_token='))
-      ?.split('=')[1];
-
     try {
-      await fetch(`/api/admin/tags/${id}`, {
-        method: 'DELETE',
-        });
+      await adminFetch(`/api/admin/tags/${id}`, { method: 'DELETE' });
       fetchTags();
     } catch {
       // ignore
