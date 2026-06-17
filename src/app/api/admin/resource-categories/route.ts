@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import verifyAdminRequest from '@/lib/admin-verify';
 
 export async function GET() {
   try {
@@ -19,11 +20,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+    if (authErr) return authErr;
 
     const supabase = getSupabaseClient();
     const body = await request.json();

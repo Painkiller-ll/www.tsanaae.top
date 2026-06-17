@@ -43,7 +43,7 @@ export default function CategoryManagement() {
     if (editing) {
       await fetch(`/api/admin/resource-categories/${editing.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
           slug: form.slug,
@@ -56,7 +56,7 @@ export default function CategoryManagement() {
     } else {
       await fetch('/api/admin/resource-categories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
           slug: form.slug,
@@ -92,8 +92,7 @@ export default function CategoryManagement() {
     const token = getToken();
     await fetch(`/api/admin/resource-categories/${cat.id}`, {
       method: 'DELETE',
-      headers: { authorization: `Bearer ${token}` },
-    });
+      });
     loadCategories();
   };
 

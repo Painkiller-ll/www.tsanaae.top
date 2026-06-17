@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import { verifyToken } from '@/lib/admin-auth';
-
+import verifyAdminRequest from '@/lib/admin-verify';
 const supabase = getSupabaseClient();
 
 // PUT - Update shop item
@@ -11,10 +10,8 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !verifyToken(authHeader.replace('Bearer ', ''))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const body = await request.json();
     const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -50,10 +47,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !verifyToken(authHeader.replace('Bearer ', ''))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const { error } = await supabase
       .from('point_shop_items')

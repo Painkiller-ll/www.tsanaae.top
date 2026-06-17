@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
+import verifyAdminRequest from '@/lib/admin-verify';
 export async function GET(request: Request) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const supabase = getSupabaseClient();
 

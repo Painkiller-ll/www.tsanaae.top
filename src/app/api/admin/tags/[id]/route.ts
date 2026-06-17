@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
+import verifyAdminRequest from '@/lib/admin-verify';
 // PUT /api/admin/tags/[id] - 更新标签
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const { id } = await params;
     const { name } = await request.json();
@@ -45,12 +42,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const { id } = await params;
     const supabase = getSupabaseClient();

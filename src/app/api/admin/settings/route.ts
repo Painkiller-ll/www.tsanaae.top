@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 const supabase = getSupabaseClient();
-import { isAdminAuthenticated } from '@/lib/admin-auth';
+import verifyAdminRequest from '@/lib/admin-verify';
 
 export async function PUT(request: Request) {
-  // Check admin auth
-  const isAuth = await isAdminAuthenticated();
-  if (!isAuth) {
-    return NextResponse.json({ error: '未授权' }, { status: 401 });
-  }
+  const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
   const body = await request.json();
 

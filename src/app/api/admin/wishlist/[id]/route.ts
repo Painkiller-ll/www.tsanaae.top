@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import { verifyToken } from '@/lib/admin-auth';
-
+import verifyAdminRequest from '@/lib/admin-verify';
 // PUT 更新心愿单状态
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.cookies.get('admin_token')?.value;
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const { id } = await params;
     const { status } = await request.json();
@@ -54,10 +51,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.cookies.get('admin_token')?.value;
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const { id } = await params;
     const supabase = getSupabaseClient();

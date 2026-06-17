@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import { verifyToken } from '@/lib/admin-auth';
-
+import verifyAdminRequest from '@/lib/admin-verify';
 const supabase = getSupabaseClient();
 
 // GET - List all shop items
@@ -23,10 +22,8 @@ export async function GET() {
 // POST - Create shop item
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !verifyToken(authHeader.replace('Bearer ', ''))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const body = await request.json();
     const { name, description, type, cost, image_url, stock, is_active, metadata } = body;

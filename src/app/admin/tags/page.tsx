@@ -23,8 +23,7 @@ export default function AdminTagsPage() {
         ?.split('=')[1];
 
       const res = await fetch('/api/admin/tags', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        });
       const data = await res.json();
       setTags(data.tags || []);
     } catch {
@@ -54,7 +53,6 @@ export default function AdminTagsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ name: newTagName.trim() }),
       });
@@ -84,7 +82,6 @@ export default function AdminTagsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ name: editName.trim() }),
       });
@@ -109,8 +106,7 @@ export default function AdminTagsPage() {
     try {
       await fetch(`/api/admin/tags/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        });
       fetchTags();
     } catch {
       // ignore

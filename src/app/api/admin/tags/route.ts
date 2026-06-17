@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
+import verifyAdminRequest from '@/lib/admin-verify';
 // GET /api/admin/tags - 获取所有标签
 export async function GET(request: Request) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const supabase = getSupabaseClient();
 
@@ -30,12 +27,8 @@ export async function GET(request: Request) {
 // POST /api/admin/tags - 创建标签
 export async function POST(request: Request) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+  if (authErr) return authErr;
 
     const body = await request.json();
     const { name } = body;

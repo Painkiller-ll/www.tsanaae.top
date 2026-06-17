@@ -74,7 +74,7 @@ export default function EditResource({ params }: { params: Promise<{ id: string 
 
   const loadResource = async () => {
     const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
-    const res = await fetch(`/api/admin/resources/${id}`, { headers: { authorization: `Bearer ${token}` } });
+    const res = await fetch(`/api/admin/resources/${id}`, { });
     const data = await res.json();
     if (data.resource) {
       const r = data.resource;
@@ -144,7 +144,7 @@ export default function EditResource({ params }: { params: Promise<{ id: string 
 
       const res = await fetch(`/api/admin/resources/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
           tags,

@@ -106,7 +106,14 @@ export default function NewResource() {
     setSaving(true);
 
     try {
-      const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
+      // 从cookie获取admin_token (非httpOnly才能读到, 或从localStorage)
+      let token = '';
+      try {
+        token = document.cookie.split('admin_token=')[1]?.split(';')[0] || '';
+      } catch {}
+      if (!token) {
+        token = localStorage.getItem('admin_token') || '';
+      }
       const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean);
 
       // 转换 extra_data 中的数字字段
@@ -118,7 +125,7 @@ export default function NewResource() {
 
       const res = await fetch('/api/admin/resources', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
           tags,

@@ -30,7 +30,7 @@ export default function AdminResources() {
     if (search) params.set('search', search);
 
     const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
-    const res = await fetch(`/api/admin/resources?${params}`, { headers: { authorization: `Bearer ${token}` } });
+    const res = await fetch(`/api/admin/resources?${params}`, { });
     const data = await res.json();
     setResources(data.resources || []);
     setTotal(data.total || 0);
@@ -58,7 +58,7 @@ export default function AdminResources() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除此资源？')) return;
     const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
-    await fetch(`/api/admin/resources/${id}`, { method: 'DELETE', headers: { authorization: `Bearer ${token}` } });
+    await fetch(`/api/admin/resources/${id}`, { method: 'DELETE', });
     fetchResources();
   };
 
@@ -66,7 +66,7 @@ export default function AdminResources() {
     if (!confirm(`确定删除选中的 ${selected.size} 个资源？`)) return;
     const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
     await Promise.all([...selected].map(id =>
-      fetch(`/api/admin/resources/${id}`, { method: 'DELETE', headers: { authorization: `Bearer ${token}` } })
+      fetch(`/api/admin/resources/${id}`, { method: 'DELETE', })
     ));
     setSelected(new Set());
     fetchResources();
@@ -76,7 +76,7 @@ export default function AdminResources() {
     const token = document.cookie.split('admin_token=')[1]?.split(';')[0];
     await fetch(`/api/admin/resources/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: value }),
     });
     fetchResources();

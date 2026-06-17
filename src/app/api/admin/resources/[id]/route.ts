@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import verifyAdminRequest from '@/lib/admin-verify';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+    if (authErr) return authErr;
 
     const { id } = await params;
     const supabase = getSupabaseClient();
@@ -20,7 +18,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     if (error) throw error;
 
-    // 获取下载链接
     const { data: links } = await supabase
       .from('resource_downloads')
       .select('*')
@@ -36,17 +33,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+    if (authErr) return authErr;
 
     const { id } = await params;
     const supabase = getSupabaseClient();
     const body = await request.json();
 
-    // 构建更新对象（只更新传入的字段）
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
     const allowedFields = ['title', 'description', 'cover_url', 'resource_type', 'category_id', 'author', 'tags', 'unlock_points', 'is_featured', 'is_published', 'extra_data'];
     for (const field of allowedFields) {
@@ -56,7 +49,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { error } = await supabase.from('resources').update(updates).eq('id', id);
     if (error) throw error;
 
-    // 更新下载链接（如果传了）
     if (body.download_links !== undefined) {
       await supabase.from('resource_downloads').delete().eq('resource_id', id);
       if (body.download_links?.length) {
@@ -81,11 +73,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { verifyToken } = await import('@/lib/admin-auth');
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token || !verifyToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authErr = await verifyAdminRequest(request);
+    if (authErr) return authErr;
 
     const { id } = await params;
     const supabase = getSupabaseClient();
