@@ -106,6 +106,23 @@ export default function AdminResources() {
     }
   };
 
+  const handleSortOrder = async (id: number, delta: number) => {
+    try {
+      const res = await adminFetch(`/api/admin/resources/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ sort_order_delta: delta }),
+      });
+      if (!res.ok) {
+        const data = await safeJson<{ error?: string }>(res);
+        alert(`操作失败: ${data.error || '未知错误'}`);
+        return;
+      }
+      fetchResources();
+    } catch (err) {
+      alert(`操作失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -165,6 +182,7 @@ export default function AdminResources() {
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">浏览</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">状态</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">精选</th>
+                <th className="px-4 py-3 text-center text-gray-600 font-medium">排序</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">操作</th>
               </tr>
             </thead>
@@ -204,6 +222,13 @@ export default function AdminResources() {
                     >
                       {r.is_featured ? '★' : '☆'}
                     </button>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button onClick={() => handleSortOrder(r.id, 10)} className="text-gray-400 hover:text-violet-600 text-xs" title="提升排序">▲</button>
+                      <span className="text-xs text-gray-500 min-w-[20px]">{r.sort_order ?? 0}</span>
+                      <button onClick={() => handleSortOrder(r.id, -10)} className="text-gray-400 hover:text-red-600 text-xs" title="降低排序">▼</button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">

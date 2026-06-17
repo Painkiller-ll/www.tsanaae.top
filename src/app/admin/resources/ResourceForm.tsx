@@ -35,6 +35,9 @@ export default function ResourceForm({ mode, resourceId }: Props) {
   const [unlockPoints, setUnlockPoints] = useState(0);
   const [isFeatured, setIsFeatured] = useState(false);
   const [isPublished, setIsPublished] = useState(true);
+  const [avgRating, setAvgRating] = useState(0);
+  const [ratingCount, setRatingCount] = useState(0);
+  const [sortOrder, setSortOrder] = useState(0);
   const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([
     { title: '下载链接1', url: '', platform: '', is_free: true },
   ]);
@@ -76,6 +79,9 @@ export default function ResourceForm({ mode, resourceId }: Props) {
             setUnlockPoints(r.unlock_points || 0);
             setIsFeatured(r.is_featured || false);
             setIsPublished(r.is_published ?? true);
+            setAvgRating(r.avg_rating ?? 0);
+            setRatingCount(r.rating_count ?? 0);
+            setSortOrder(r.sort_order ?? 0);
             // download_links from resource_downloads table or extra_data
             const links = r.download_links || r.downloads || [];
             if (Array.isArray(links) && links.length > 0) {
@@ -188,6 +194,9 @@ export default function ResourceForm({ mode, resourceId }: Props) {
         unlock_points: unlockPoints,
         is_featured: isFeatured,
         is_published: isPublished,
+        avg_rating: avgRating,
+        rating_count: ratingCount,
+        sort_order: sortOrder,
         extra_data: extra,
         download_links: downloadLinks.filter(l => l.url.trim()),
       };
@@ -480,7 +489,7 @@ export default function ResourceForm({ mode, resourceId }: Props) {
             ))}
           </div>
 
-          {/* 设置 */}
+          {/* 发布设置 */}
           <div className="bg-card rounded-xl p-6 border border-border space-y-5">
             <h3 className="text-lg font-semibold text-foreground">发布设置</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -517,6 +526,51 @@ export default function ResourceForm({ mode, resourceId }: Props) {
                   />
                   <span className="text-sm text-foreground">设为精选</span>
                 </label>
+              </div>
+            </div>
+          </div>
+
+          {/* 评分与排序 */}
+          <div className="bg-card rounded-xl p-6 border border-border space-y-5">
+            <h3 className="text-lg font-semibold text-foreground">评分与排序</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">评分</label>
+                <input
+                  type="number"
+                  value={avgRating}
+                  onChange={e => setAvgRating(Number(e.target.value))}
+                  min={0}
+                  max={5}
+                  step={0.1}
+                  placeholder="0-5"
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <span className="text-xs text-muted-foreground mt-1">0~5 分，支持小数</span>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">评分人数</label>
+                <input
+                  type="number"
+                  value={ratingCount}
+                  onChange={e => setRatingCount(Number(e.target.value))}
+                  min={0}
+                  placeholder="如：128"
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <span className="text-xs text-muted-foreground mt-1">评价人数，越大越热门</span>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">排序权重</label>
+                <input
+                  type="number"
+                  value={sortOrder}
+                  onChange={e => setSortOrder(Number(e.target.value))}
+                  min={0}
+                  placeholder="0=默认"
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <span className="text-xs text-muted-foreground mt-1">数值越大排越前，0 为正常排序</span>
               </div>
             </div>
           </div>

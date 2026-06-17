@@ -17,7 +17,8 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('resources')
-      .select('id, title, resource_type, cover_url, avg_rating, view_count, is_published, is_featured, created_at', { count: 'exact' })
+      .select('id, title, resource_type, cover_url, avg_rating, rating_count, view_count, is_published, is_featured, sort_order, created_at', { count: 'exact' })
+      .order('sort_order', { ascending: false })
       .order('created_at', { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
 
@@ -56,6 +57,9 @@ export async function POST(request: Request) {
         is_featured: body.is_featured || false,
         is_published: body.is_published !== false,
         extra_data: body.extra_data || {},
+        avg_rating: body.avg_rating ?? 0,
+        rating_count: body.rating_count ?? 0,
+        sort_order: body.sort_order ?? 0,
       })
       .select()
       .single();

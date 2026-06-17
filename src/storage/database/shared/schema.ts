@@ -92,6 +92,7 @@ export const games = pgTable(
     rec_specs: jsonb("rec_specs").$type<Record<string, string>>(),
     likes: integer("likes").default(0).notNull(),
     is_featured: boolean("is_featured").default(false).notNull(),
+    sort_order: integer("sort_order").default(0).notNull(),
     download_url: text("download_url"),
     download_links: jsonb("download_links").$type<Array<{label: string; url: string}>>().default([]),
     download_count: integer("download_count").default(0).notNull(),

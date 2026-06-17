@@ -24,11 +24,16 @@ export async function GET(request: NextRequest) {
     if (featured) query = query.eq('is_featured', true);
     if (tag) query = query.contains('tags', [tag]);
 
-    // 排序
-    if (sort === 'newest') query = query.order('created_at', { ascending: false });
-    else if (sort === 'popular') query = query.order('view_count', { ascending: false });
-    else if (sort === 'rating') query = query.order('avg_rating', { ascending: false });
-    else if (sort === 'likes') query = query.order('like_count', { ascending: false });
+    // 排序：sort_order优先，然后按指定字段
+    if (sort === 'newest') {
+      query = query.order('sort_order', { ascending: false }).order('created_at', { ascending: false });
+    } else if (sort === 'popular') {
+      query = query.order('sort_order', { ascending: false }).order('view_count', { ascending: false });
+    } else if (sort === 'rating') {
+      query = query.order('sort_order', { ascending: false }).order('avg_rating', { ascending: false });
+    } else if (sort === 'likes') {
+      query = query.order('sort_order', { ascending: false }).order('like_count', { ascending: false });
+    }
 
     query = query.range(offset, offset + limit - 1);
 

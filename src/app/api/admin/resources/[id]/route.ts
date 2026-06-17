@@ -46,9 +46,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const body = await request.json();
 
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
-    const allowedFields = ['title', 'description', 'cover_url', 'resource_type', 'category_id', 'author', 'tags', 'unlock_points', 'is_featured', 'is_published', 'extra_data'];
+    const allowedFields = ['title', 'description', 'cover_url', 'resource_type', 'category_id', 'author', 'tags', 'unlock_points', 'is_featured', 'is_published', 'extra_data', 'avg_rating', 'rating_count', 'sort_order'];
     for (const field of allowedFields) {
       if (body[field] !== undefined) updates[field] = body[field];
+    }
+
+    // 支持 sort_order_delta：相对调整排序
+    if (body.sort_order_delta !== undefined) {
+      const { data: current } = await supabase.from('resources').select('sort_order').eq('id', id).single();
+      updates.sort_order = (current?.sort_order || 0) + Number(body.sort_order_delta);
     }
 
     const { error } = await supabase.from('resources').update(updates).eq('id', id);
