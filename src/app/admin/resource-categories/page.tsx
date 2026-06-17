@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 
 const TYPE_LABELS: Record<string, string> = {
   study: '学习资料', movie: '影视剧', music: '音乐',
@@ -54,7 +55,7 @@ export default function CategoryManagement() {
         }),
       });
     } else {
-      await fetch('/api/admin/resource-categories', {
+      await adminFetch('/api/admin/resource-categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { adminFetch } from '@/lib/admin-fetch';
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
@@ -15,7 +16,7 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/auth', {
+      const res = await adminFetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
@@ -23,7 +24,8 @@ export default function AdminLoginPage() {
 
       const data = await res.json();
 
-      if (res.ok) {
+      if (res.ok && data.token) {
+        localStorage.setItem('admin_token', data.token);
         router.push('/admin');
       } else {
         setError(data.error || '登录失败');

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface DashboardStats {
   totalResources: number;
@@ -22,7 +23,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/stats').then(r => r.json()).then(data => {
+    adminFetch('/api/admin/stats').then(r => r.json()).then(data => {
       setStats(data);
       setLoading(false);
     }).catch(() => setLoading(false));

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Announcement {
   id: string;
@@ -41,7 +42,7 @@ export default function AdminAnnouncementsPage() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/check');
+      const res = await adminFetch('/api/admin/check');
       const data = await res.json();
       setAuthenticated(data.authenticated);
       if (!data.authenticated) router.push('/admin/login');

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DEFAULT_RESOURCE_TYPES, DEFAULT_COVERS } from '@/lib/types';
+import { adminFetch } from '@/lib/admin-fetch';
 import type { ResourceType } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
 
@@ -102,7 +103,7 @@ export default function ResourceForm({ mode, resourceId }: Props) {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await adminFetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
       if (data.url) {
         setCoverUrl(data.url);
@@ -184,9 +185,8 @@ export default function ResourceForm({ mode, resourceId }: Props) {
       const url = mode === 'edit' ? `/api/admin/resources/${resourceId}` : '/api/admin/resources';
       const method = mode === 'edit' ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
 

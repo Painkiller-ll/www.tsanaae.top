@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Settings {
   site_name: string;
@@ -48,7 +49,7 @@ export default function AdminSettingsPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/check').then(r => r.json()).then(d => {
+    adminFetch('/api/admin/check').then(r => r.json()).then(d => {
       if (!d.authenticated) router.push('/admin/login');
     });
     fetch('/api/site-settings').then(r => r.json()).then(d => setSettings(prev => ({ ...prev, ...d })));
@@ -58,7 +59,7 @@ export default function AdminSettingsPage() {
     setSaving(true);
     setMessage('');
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await adminFetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface MusicTrack {
   id: string;
@@ -30,7 +31,7 @@ export default function AdminMusicPage() {
 
   const fetchTracks = async () => {
     try {
-      const res = await fetch('/api/admin/music');
+      const res = await adminFetch('/api/admin/music');
       const data = await res.json();
       setTracks(data.tracks || []);
     } catch {
@@ -57,7 +58,7 @@ export default function AdminMusicPage() {
       if (newCover) formData.append('cover_image', newCover);
       formData.append('sort_order', String(tracks.length));
 
-      const res = await fetch('/api/admin/music', { method: 'POST', body: formData });
+      const res = await adminFetch('/api/admin/music', { method: 'POST', body: formData });
       const data = await res.json();
 
       if (data.track) {
@@ -78,7 +79,7 @@ export default function AdminMusicPage() {
 
   const toggleActive = async (track: MusicTrack) => {
     try {
-      const res = await fetch('/api/admin/music', {
+      const res = await adminFetch('/api/admin/music', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: track.id, is_active: !track.is_active }),
@@ -106,7 +107,7 @@ export default function AdminMusicPage() {
 
   const updateTrack = async (id: string, field: string, value: string | number) => {
     try {
-      const res = await fetch('/api/admin/music', {
+      const res = await adminFetch('/api/admin/music', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, [field]: value }),

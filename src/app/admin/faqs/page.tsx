@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 
 export default function AdminFAQsPage() {
   const [faqs, setFaqs] = useState<Array<{ id: string; question: string; answer: string; sort_order: number; is_active: boolean }>>([]);
@@ -9,7 +10,7 @@ export default function AdminFAQsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const fetchFaqs = async () => {
-    const res = await fetch('/api/admin/faqs');
+    const res = await adminFetch('/api/admin/faqs');
     const data = await res.json();
     setFaqs(data.faqs || []);
     setLoading(false);
@@ -26,7 +27,7 @@ export default function AdminFAQsPage() {
         body: JSON.stringify(form),
       });
     } else {
-      await fetch('/api/admin/faqs', {
+      await adminFetch('/api/admin/faqs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

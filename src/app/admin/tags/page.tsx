@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface Tag {
   id: string;
@@ -22,7 +23,7 @@ export default function AdminTagsPage() {
         .find(row => row.startsWith('admin_token='))
         ?.split('=')[1];
 
-      const res = await fetch('/api/admin/tags', {
+      const res = await adminFetch('/api/admin/tags', {
         });
       const data = await res.json();
       setTags(data.tags || []);
@@ -49,7 +50,7 @@ export default function AdminTagsPage() {
       ?.split('=')[1];
 
     try {
-      const res = await fetch('/api/admin/tags', {
+      const res = await adminFetch('/api/admin/tags', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

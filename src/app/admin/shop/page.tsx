@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { adminFetch } from '@/lib/admin-fetch';
 
 interface ShopItem {
   id: string;
@@ -37,7 +38,7 @@ export default function AdminShopPage() {
 
   const fetchItems = async () => {
     try {
-      const res = await fetch('/api/admin/shop');
+      const res = await adminFetch('/api/admin/shop');
       if (res.ok) {
         const data = await res.json();
         setItems(data.items || []);

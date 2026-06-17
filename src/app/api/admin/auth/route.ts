@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const cookieOpts = getAdminCookieOptions();
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, token });
     response.cookies.set(cookieOpts.name, token, cookieOpts.options);
 
     return response;

@@ -22,6 +22,16 @@ async function verifyAdminRequest(request: Request): Promise<NextResponse | null
   const rawCookieToken = cookieHeader.split('admin_token=')[1]?.split(';')[0];
   if (rawCookieToken && verifyToken(rawCookieToken)) return null;
   
+  // Also try decoded cookie value (URL-decoded)
+  if (rawCookieToken) {
+    try {
+      const decoded = decodeURIComponent(rawCookieToken);
+      if (verifyToken(decoded)) return null;
+    } catch {}
+  }
+  
+  console.error('[admin-verify] All auth methods failed. Cookie header:', cookieHeader ? cookieHeader.substring(0, 100) : 'EMPTY');
+  
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 
