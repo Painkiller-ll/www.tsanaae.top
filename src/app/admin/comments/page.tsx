@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
-interface Comment {
+interface UnifiedComment {
   id: number;
-  article_id: number;
-  article_title: string;
+  source: 'article' | 'resource';
+  source_title: string;
   content: string;
   author_name: string;
   status: string;
@@ -15,19 +15,57 @@ interface Comment {
 }
 
 export default function AdminCommentsPage() {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<UnifiedComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('pending');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
 
   useEffect(() => {
     loadComments();
-  }, [filter]);
+  }, [filter, sourceFilter]);
 
   const loadComments = async () => {
+    setLoading(true);
     try {
-      const url = filter === 'all' ? '/api/admin/article-comments' : `/api/admin/article-comments?status=${filter}`;
-      const data: any = await adminFetch(url).then(safeJson);
-      setComments(data?.comments || []);
+      const allComments: UnifiedComment[] = [];
+
+      // 获取文章评论
+      if (sourceFilter === 'all' || sourceFilter === 'article') {
+        const url = filter === 'all' ? '/api/admin/article-comments' : `/api/admin/article-comments?status=${filter}`;
+        const data: any = await adminFetch(url).then(safeJson);
+        for (const c of data?.comments || []) {
+          allComments.push({
+            id: c.id,
+            source: 'article',
+            source_title: c.articles?.title || `文章#${c.article_id}`,
+            content: c.content,
+            author_name: c.author_name,
+            status: c.status,
+            created_at: c.created_at,
+          });
+        }
+      }
+
+      // 获取资源评论
+      if (sourceFilter === 'all' || sourceFilter === 'resource') {
+        const url = filter === 'all' ? '/api/admin/resource-comments' : `/api/admin/resource-comments?status=${filter}`;
+        const data: any = await adminFetch(url).then(safeJson);
+        for (const c of data?.comments || []) {
+          allComments.push({
+            id: c.id,
+            source: 'resource',
+            source_title: c.resources?.title || `资源#${c.resource_id}`,
+            content: c.content,
+            author_name: c.username || '匿名用户',
+            status: c.status,
+            created_at: c.created_at,
+          });
+        }
+      }
+
+      // 按时间排序
+      allComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setComments(allComments);
     } catch {
       setComments([]);
     } finally {
@@ -35,11 +73,12 @@ export default function AdminCommentsPage() {
     }
   };
 
-  const updateStatus = async (id: number, status: string) => {
+  const updateStatus = async (comment: UnifiedComment, status: string) => {
     try {
-      const res = await adminFetch(`/api/admin/article-comments`, {
+      const apiBase = comment.source === 'article' ? '/api/admin/article-comments' : '/api/admin/resource-comments';
+      const res = await adminFetch(apiBase, {
         method: 'PUT',
-        body: { id, status },
+        body: { id: comment.id, status },
       });
       const data: any = await safeJson(res);
       if (res.ok) {
@@ -53,10 +92,11 @@ export default function AdminCommentsPage() {
     }
   };
 
-  const deleteComment = async (id: number) => {
+  const deleteComment = async (comment: UnifiedComment) => {
     if (!confirm('确定删除此评论？')) return;
     try {
-      const res = await adminFetch(`/api/admin/article-comments?id=${id}`, { method: 'DELETE' });
+      const apiBase = comment.source === 'article' ? '/api/admin/article-comments' : '/api/admin/resource-comments';
+      const res = await adminFetch(`${apiBase}?id=${comment.id}`, { method: 'DELETE' });
       if (res.ok) loadComments();
       else alert('删除失败');
     } catch {
@@ -73,6 +113,11 @@ export default function AdminCommentsPage() {
     }
   };
 
+  const sourceLabel = (source: string) => {
+    if (source === 'article') return <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs">文章</span>;
+    return <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-xs">资源</span>;
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -80,7 +125,7 @@ export default function AdminCommentsPage() {
         <Link href="/admin" className="text-gray-400 hover:text-white text-sm">← 返回</Link>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-4">
         {[
           { key: 'pending', label: '待审核' },
           { key: 'all', label: '全部' },
@@ -89,10 +134,30 @@ export default function AdminCommentsPage() {
         ].map(f => (
           <button
             key={f.key}
-            onClick={() => { setFilter(f.key); setLoading(true); }}
+            onClick={() => setFilter(f.key)}
             className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
               filter === f.key
                 ? 'bg-purple-600 text-white'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-6">
+        {[
+          { key: 'all', label: '全部来源' },
+          { key: 'article', label: '文章评论' },
+          { key: 'resource', label: '资源评论' },
+        ].map(f => (
+          <button
+            key={f.key}
+            onClick={() => setSourceFilter(f.key)}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+              sourceFilter === f.key
+                ? 'bg-indigo-600 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -110,12 +175,13 @@ export default function AdminCommentsPage() {
       ) : (
         <div className="space-y-3">
           {comments.map(comment => (
-            <div key={comment.id} className="rounded-xl border border-white/8 p-4" style={{ backgroundColor: '#1a1a24' }}>
+            <div key={`${comment.source}-${comment.id}`} className="rounded-xl border border-white/8 p-4" style={{ backgroundColor: '#1a1a24' }}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {statusLabel(comment.status)}
-                    <span className="text-xs text-gray-500">评论于: {comment.article_title}</span>
+                    {sourceLabel(comment.source)}
+                    <span className="text-xs text-gray-500">评论于: {comment.source_title}</span>
                   </div>
                   <p className="text-gray-300 text-sm">{comment.content}</p>
                   <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
@@ -126,17 +192,17 @@ export default function AdminCommentsPage() {
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   {comment.status === 'pending' && (
                     <>
-                      <button onClick={() => updateStatus(comment.id, 'approved')} className="px-3 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700">通过</button>
-                      <button onClick={() => updateStatus(comment.id, 'rejected')} className="px-3 py-1 rounded bg-red-600 text-white text-xs hover:bg-red-700">拒绝</button>
+                      <button onClick={() => updateStatus(comment, 'approved')} className="px-3 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700">通过</button>
+                      <button onClick={() => updateStatus(comment, 'rejected')} className="px-3 py-1 rounded bg-red-600 text-white text-xs hover:bg-red-700">拒绝</button>
                     </>
                   )}
                   {comment.status === 'approved' && (
-                    <button onClick={() => updateStatus(comment.id, 'rejected')} className="px-3 py-1 rounded bg-red-600/20 text-red-400 text-xs hover:bg-red-600/30">撤回</button>
+                    <button onClick={() => updateStatus(comment, 'rejected')} className="px-3 py-1 rounded bg-red-600/20 text-red-400 text-xs hover:bg-red-600/30">撤回</button>
                   )}
                   {comment.status === 'rejected' && (
-                    <button onClick={() => updateStatus(comment.id, 'approved')} className="px-3 py-1 rounded bg-green-600/20 text-green-400 text-xs hover:bg-green-600/30">恢复</button>
+                    <button onClick={() => updateStatus(comment, 'approved')} className="px-3 py-1 rounded bg-green-600/20 text-green-400 text-xs hover:bg-green-600/30">恢复</button>
                   )}
-                  <button onClick={() => deleteComment(comment.id)} className="px-3 py-1 rounded bg-white/5 text-gray-400 text-xs hover:bg-red-600/20 hover:text-red-400">删除</button>
+                  <button onClick={() => deleteComment(comment)} className="px-3 py-1 rounded bg-white/5 text-gray-400 text-xs hover:bg-red-600/20 hover:text-red-400">删除</button>
                 </div>
               </div>
             </div>

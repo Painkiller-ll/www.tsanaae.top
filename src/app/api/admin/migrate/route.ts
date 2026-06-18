@@ -125,6 +125,18 @@ export async function POST(request: Request) {
       results.resources_table.push('submitter_name: ok');
     }
 
+    // === comments table - 评论审核 ===
+    const { data: comCheck, error: comError } = await supabase
+      .from('comments')
+      .select('status')
+      .limit(1);
+
+    if (comError && (comError.message.includes('column') || comError.message.includes('does not exist'))) {
+      results.comments_table = ['status: 需手动添加 - ALTER TABLE comments ADD COLUMN status text DEFAULT \'approved\'; UPDATE comments SET status = \'approved\' WHERE status IS NULL;'];
+    } else {
+      results.comments_table = ['status: ok'];
+    }
+
     return NextResponse.json({
       migrationResults: results,
     });

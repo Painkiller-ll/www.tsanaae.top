@@ -29,6 +29,7 @@ export interface ResourceCategory {
   resource_type: ResourceType;
   parent_id: number | null;
   icon: string | null;
+  color?: string;
   sort_order: number;
   children?: ResourceCategory[];
 }
@@ -53,6 +54,11 @@ export interface Resource {
   extra_data: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  // 投稿相关
+  status?: string;
+  download_url?: string;
+  submitter_name?: string;
+  submitter_contact?: string;
   // 关联数据
   category?: ResourceCategory;
   download_links?: DownloadLink[];
@@ -88,10 +94,12 @@ export interface Comment {
   user_id: string;
   username: string;
   nickname: string;
+  author_name?: string;
   avatar_url: string | null;
   content: string;
   parent_id: number | null;
   likes: number;
+  status?: string;
   created_at: string;
   replies?: Comment[];
 }

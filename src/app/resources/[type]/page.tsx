@@ -151,7 +151,7 @@ export default function ResourcesByTypePage() {
         ) : resources.length > 0 ? (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {resources.map(r => <ResourceCard key={r.id} resource={r} />)}
+              {resources.map(r => <ResourceCard key={r.id} resource={r} categories={categories} />)}
             </div>
 
             {/* 分页 */}

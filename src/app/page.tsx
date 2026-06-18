@@ -37,6 +37,7 @@ const LEGACY_STYLES: Record<string, CategoryStyle> = {
   game:     COLOR_PALETTE[3],
   novel:    COLOR_PALETTE[4],
   software: COLOR_PALETTE[5],
+  article:  { gradient: 'from-emerald-500 to-emerald-700', bgLight: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-200 dark:border-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400', icon: '✏️' },
 };
 
 /** 根据 sort_order 获取分类样式 */
@@ -55,10 +56,11 @@ function CategoryGrid({ categories, resourcesByType }: {
   const [expanded, setExpanded] = useState(false);
 
   // 推荐卡片 + 分类卡片
-  type CategoryItem = { id: string; isPromo: true } | { id: string; isPromo: false; cat: ResourceCategory };
+  type CategoryItem = { id: string; isPromo: true; isArticle?: false } | { id: string; isArticle: true; isPromo?: false } | { id: string; isPromo: false; isArticle: false; cat: ResourceCategory };
   const allItems: CategoryItem[] = [
-    { id: '__promo__', isPromo: true },
-    ...categories.map(cat => ({ id: String(cat.id), isPromo: false as const, cat })),
+    { id: '__promo__', isPromo: true, isArticle: false },
+    { id: '__article__', isArticle: true, isPromo: false },
+    ...categories.map(cat => ({ id: String(cat.id), isPromo: false as const, isArticle: false as const, cat })),
   ];
 
   // 每行最多显示数：手机2列、平板3列、桌面6列
@@ -85,6 +87,23 @@ function CategoryGrid({ categories, resourcesByType }: {
                   </svg>
                   <span className="font-bold text-sm sm:text-base text-amber-400">推荐</span>
                   <span className="text-[10px] sm:text-xs text-amber-400/60">精选推荐</span>
+                </div>
+              </Link>
+            );
+          }
+          if ('isArticle' in item && item.isArticle) {
+            const style = LEGACY_STYLES.article;
+            return (
+              <Link
+                key={item.id}
+                href="/articles"
+                className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border ${style.border} ${style.bgLight} p-3 sm:p-5 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
+                <div className="relative z-10 flex flex-col items-center text-center gap-1 sm:gap-2">
+                  <span className="text-2xl sm:text-4xl">{style.icon}</span>
+                  <span className={`font-bold text-sm sm:text-base ${style.text}`}>文章</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">教程分享</span>
                 </div>
               </Link>
             );
@@ -135,6 +154,10 @@ export default function HomePage() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [featuredResources, setFeaturedResources] = useState<Resource[]>([]);
   const [articles, setArticles] = useState<{id:number;title:string;cover_image:string|null;author_name:string;created_at:string;category:string|null}[]>([]);
+  const [articleTotal, setArticleTotal] = useState(0);
+  const [articlePage, setArticlePage] = useState(1);
+  const ARTICLE_PAGE_SIZE = 6;
+  const articleTotalPages = Math.ceil(articleTotal / ARTICLE_PAGE_SIZE);
   const [siteDesc, setSiteDesc] = useState('');
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -150,11 +173,11 @@ export default function HomePage() {
         .then(r => r.json())
         .then(d => { if (d.data) setFeaturedResources(d.data); })
         .catch(() => {}),
-      fetch('/api/articles?limit=6')
+      fetch(`/api/articles?limit=${ARTICLE_PAGE_SIZE}&offset=${(articlePage - 1) * ARTICLE_PAGE_SIZE}`)
         .then(r => r.json())
         .then(d => {
-          const list = d.data || d || [];
-          setArticles(list.slice(0, 6));
+          setArticles(d.articles || []);
+          setArticleTotal(d.total || 0);
         })
         .catch(() => {}),
       fetch('/api/site-settings')
@@ -164,7 +187,7 @@ export default function HomePage() {
           setSettings(d);
         }),
     ]).finally(() => setLoading(false));
-  }, []);
+  }, [articlePage]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,8 +216,8 @@ export default function HomePage() {
               <CategoryGrid categories={categories} resourcesByType={{}} />
             </section>
 
-            {/* 投稿入口 */}
-            <div className="mb-6 mt-4">
+            {/* 投稿入口 - 仅手机/平板可见 */}
+            <div className="mb-6 mt-4 md:hidden">
               <a
                 href="/submit"
                 className="flex items-center justify-center gap-2 w-full sm:w-auto sm:inline-flex rounded-xl bg-gradient-to-r from-purple-600 to-violet-500 px-6 py-3 text-sm sm:text-base font-bold text-white shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] transition-all duration-200"
@@ -218,7 +241,7 @@ export default function HomePage() {
               </div>
               {featuredResources.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-                  {featuredResources.map(r => <ResourceCard key={r.id} resource={r} />)}
+                  {featuredResources.map(r => <ResourceCard key={r.id} resource={r} categories={categories} />)}
                 </div>
               ) : (
                 <div className="text-center py-12 text-muted-foreground text-sm">

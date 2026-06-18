@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined;
     const category = searchParams.get('category');
     const featured = searchParams.get('featured');
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (category) query = query.eq('category', category);
     if (featured === 'true') query = query.eq('is_featured', true);
 
-    const from = (page - 1) * limit;
+    const from = offset !== undefined ? offset : (page - 1) * limit;
     const to = from + limit - 1;
     query = query.range(from, to);
 

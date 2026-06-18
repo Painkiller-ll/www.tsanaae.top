@@ -108,21 +108,12 @@ export default function Header({ onOpenAuth }: HeaderProps) {
             </Link>
             <Link
               href="/submit"
-              className="px-3 py-1.5 text-sm text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 transition-colors flex items-center gap-1.5 font-medium"
+              className="md:hidden px-3 py-1.5 text-sm text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 transition-colors flex items-center gap-1.5 font-medium"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
               </svg>
               <span>投稿</span>
-            </Link>
-            <Link
-              href="/articles"
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-              </svg>
-              <span>文章</span>
             </Link>
           </nav>
 
@@ -226,17 +217,6 @@ export default function Header({ onOpenAuth }: HeaderProps) {
               <span>推荐</span>
             </Link>
             <div className="border-t border-border my-1" />
-            <Link
-              href="/articles"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 font-semibold"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
-              <span>文章</span>
-            </Link>
             <Link
               href="/submit"
               onClick={() => setMobileMenuOpen(false)}

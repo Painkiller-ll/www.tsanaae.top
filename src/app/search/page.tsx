@@ -87,7 +87,7 @@ function SearchContent() {
         ) : resources.length > 0 ? (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {resources.map(r => <ResourceCard key={r.id} resource={r} />)}
+              {resources.map(r => <ResourceCard key={r.id} resource={r} categories={topCategories} />)}
             </div>
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-8">

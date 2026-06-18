@@ -5,7 +5,9 @@ import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import ResourceCard from '@/components/ResourceCard';
-import { DEFAULT_RESOURCE_TYPES, type Resource, type ResourceType, type Comment } from '@/lib/types';
+import { type Resource, type ResourceCategory, type Comment } from '@/lib/types';
+
+const PAGE_SIZE = 12;
 
 export default function ResourceDetailPage() {
   const params = useParams();
@@ -13,8 +15,12 @@ export default function ResourceDetailPage() {
   const [resource, setResource] = useState<Resource | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
+  const [commentName, setCommentName] = useState('');
   const [userScore, setUserScore] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [relatedResources, setRelatedResources] = useState<Resource[]>([]);
+  const [categoryInfo, setCategoryInfo] = useState<ResourceCategory | null>(null);
+  const [allCategories, setAllCategories] = useState<ResourceCategory[]>([]);
 
   useEffect(() => {
     loadData();
@@ -22,13 +28,9 @@ export default function ResourceDetailPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('user_token') : null;
-    const headers: Record<string, string> = {};
-    if (token) headers['x-session'] = token;
-
     try {
       const [resRes, comRes] = await Promise.all([
-        fetch(`/api/resources/${id}`, { headers }),
+        fetch(`/api/resources/${id}`),
         fetch(`/api/resources/${id}/comments`),
       ]);
       const resData = await resRes.json();
@@ -42,51 +44,62 @@ export default function ResourceDetailPage() {
     setLoading(false);
   };
 
+  // 加载分类信息和相关资源
+  useEffect(() => {
+    if (!resource) return;
+    // 获取分类信息
+    fetch('/api/resource-categories?top_level=true')
+      .then(r => r.json())
+      .then(d => {
+        const cats: ResourceCategory[] = d.data || [];
+        setAllCategories(cats);
+        const cat = cats.find((c: ResourceCategory) => c.slug === resource.resource_type);
+        if (cat) setCategoryInfo(cat);
+      })
+      .catch(() => {});
+    // 获取相关资源
+    fetch(`/api/resources?type=${resource.resource_type}&limit=6`)
+      .then(r => r.json())
+      .then(d => setRelatedResources((d.data || []).filter((r: Resource) => r.id !== resource.id)))
+      .catch(() => {});
+  }, [resource?.resource_type, resource?.id]);
+
   const handleRate = async (score: number) => {
-    const token = localStorage.getItem('user_token');
-    if (!token) { alert('请先登录'); return; }
     const res = await fetch(`/api/resources/${id}/rate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-session': token },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ score }),
     });
     if (res.ok) { setUserScore(score); loadData(); }
   };
 
   const handleComment = async () => {
-    const token = localStorage.getItem('user_token');
-    if (!token) { alert('请先登录'); return; }
     if (!commentText.trim()) return;
     const res = await fetch(`/api/resources/${id}/comments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-session': token },
-      body: JSON.stringify({ content: commentText.trim() }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: commentText.trim(), author_name: commentName.trim() || '匿名用户' }),
     });
-    if (res.ok) { setCommentText(''); loadData(); }
+    if (res.ok) {
+      setCommentText('');
+      setCommentName('');
+      alert('评论已提交，等待审核后显示');
+    } else {
+      const data = await res.json();
+      alert(data.error || '评论失败');
+    }
   };
 
-  const handleFavorite = async () => {
-    const token = localStorage.getItem('user_token');
-    if (!token) { alert('请先登录'); return; }
-    const res = await fetch('/api/user/favorites', {
-      method: resource?.is_favorited ? 'DELETE' : 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-session': token },
-      body: JSON.stringify({ resource_id: parseInt(id) }),
-    });
-    if (res.ok) loadData();
-  };
+  const getCategoryLabel = () => categoryInfo?.name || resource?.resource_type || '';
+  const getCategoryIcon = () => categoryInfo?.icon || '📁';
+  const getCategoryColor = () => categoryInfo?.color || '#6366f1';
 
-  const handleUnlock = async () => {
-    const token = localStorage.getItem('user_token');
-    if (!token) { alert('请先登录'); return; }
-    const res = await fetch('/api/user/unlock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-session': token },
-      body: JSON.stringify({ resource_id: parseInt(id) }),
-    });
-    const data = await res.json();
-    if (data.success) { loadData(); }
-    else { alert(data.error || '解锁失败'); }
+  const getAuthorLabel = () => {
+    const slug = resource?.resource_type;
+    if (slug === 'movie' || slug === 'tv-series' || slug === 'anime' || slug === 'variety') return '导演';
+    if (slug === 'novel') return '作者';
+    if (slug === 'music') return '艺人';
+    return '开发商';
   };
 
   if (loading) {
@@ -115,8 +128,15 @@ export default function ResourceDetailPage() {
     );
   }
 
-  const typeConfig = DEFAULT_RESOURCE_TYPES[resource.resource_type as ResourceType] || { label: resource.resource_type, icon: '📁' };
   const extra = resource.extra_data as Record<string, string>;
+
+  // extra_data key 中文映射
+  const keyLabelMap: Record<string, string> = {
+    director: '导演', developer: '开发商', author: '作者', artist: '艺人',
+    platform: '平台', version: '版本', size: '大小', language: '语言',
+    duration: '时长', episodes: '集数', season: '季数', genre: '类型',
+    publisher: '发行商', release_date: '发行日期', rating: '评分',
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,7 +146,7 @@ export default function ResourceDetailPage() {
           title={resource.title}
           breadcrumbs={[
             { label: '首页', href: '/' },
-            { label: typeConfig.label, href: `/resources/${resource.resource_type}` },
+            { label: getCategoryLabel(), href: `/resources/${resource.resource_type}` },
             { label: resource.title },
           ]}
         />
@@ -140,23 +160,9 @@ export default function ResourceDetailPage() {
                 <img src={resource.cover_url} alt={resource.title} className="w-full aspect-[3/4] object-cover" />
               ) : (
                 <div className="w-full aspect-[3/4] flex items-center justify-center bg-white/5">
-                  <span className="text-6xl">{typeConfig.icon}</span>
+                  <span className="text-6xl">{getCategoryIcon()}</span>
                 </div>
               )}
-            </div>
-
-            {/* 操作按钮 */}
-            <div className="mt-4 space-y-2">
-              <button
-                onClick={handleFavorite}
-                className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  resource.is_favorited
-                    ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
-                    : 'bg-white/5 text-muted-foreground border border-border hover:border-primary/30 hover:text-foreground'
-                }`}
-              >
-                {resource.is_favorited ? '已收藏' : '收藏'}
-              </button>
             </div>
 
             {/* 评分 */}
@@ -186,15 +192,15 @@ export default function ResourceDetailPage() {
                   <h1 className="text-xl font-bold text-foreground">{resource.title}</h1>
                   {resource.author && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      {resource.resource_type === 'movie' ? '导演' : resource.resource_type === 'novel' ? '作者' : resource.resource_type === 'music' ? '艺人' : '开发商'}：{resource.author}
+                      {getAuthorLabel()}：{resource.author}
                     </p>
                   )}
                 </div>
                 <span
                   className="shrink-0 px-2.5 py-1 rounded-full text-xs font-medium text-white"
-                  style={{ backgroundColor: typeConfig.color }}
+                  style={{ backgroundColor: getCategoryColor() }}
                 >
-                  {typeConfig.icon} {typeConfig.label}
+                  {getCategoryIcon()} {getCategoryLabel()}
                 </span>
               </div>
 
@@ -215,6 +221,23 @@ export default function ResourceDetailPage() {
               {resource.description && (
                 <p className="text-sm text-muted-foreground mt-4 leading-relaxed whitespace-pre-wrap">{resource.description}</p>
               )}
+
+              {/* 下载链接 - 如果有 download_url */}
+              {resource.download_url && (
+                <div className="mt-4">
+                  <a
+                    href={resource.download_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/80 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    下载资源
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* 类型特有信息 */}
@@ -224,7 +247,7 @@ export default function ResourceDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {Object.entries(extra).map(([key, value]) => (
                     <div key={key}>
-                      <span className="text-xs text-muted-foreground">{key}</span>
+                      <span className="text-xs text-muted-foreground">{keyLabelMap[key] || key}</span>
                       <p className="text-sm text-foreground">{String(value)}</p>
                     </div>
                   ))}
@@ -232,31 +255,22 @@ export default function ResourceDetailPage() {
               </div>
             )}
 
-            {/* 下载链接 */}
+            {/* 下载链接 - 旧版 download_links */}
             {resource.download_links && resource.download_links.length > 0 && (
               <div className="p-5 rounded-xl bg-card border border-border">
                 <h2 className="text-sm font-semibold text-foreground mb-3">下载链接</h2>
                 <div className="space-y-2">
-                  {resource.download_links.map((dl, i) => {
-                    const isLocked = !dl.is_free && !resource.is_unlocked;
-                    return (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-border">
-                        <div>
-                          <p className="text-sm text-foreground">{dl.title}</p>
-                          {dl.platform && <p className="text-xs text-muted-foreground">{dl.platform}</p>}
-                        </div>
-                        {isLocked ? (
-                          <button onClick={handleUnlock} className="px-3 py-1.5 rounded-lg bg-yellow-500 text-black text-xs font-medium hover:bg-yellow-400 transition-colors">
-                            {resource.unlock_points}积分解锁
-                          </button>
-                        ) : (
-                          <a href={dl.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/80 transition-colors">
-                            下载
-                          </a>
-                        )}
+                  {resource.download_links.map((dl, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-border">
+                      <div>
+                        <p className="text-sm text-foreground">{dl.title}</p>
+                        {dl.platform && <p className="text-xs text-muted-foreground">{dl.platform}</p>}
                       </div>
-                    );
-                  })}
+                      <a href={dl.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/80 transition-colors">
+                        下载
+                      </a>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -265,17 +279,26 @@ export default function ResourceDetailPage() {
             <div className="p-5 rounded-xl bg-card border border-border">
               <h2 className="text-sm font-semibold text-foreground mb-4">评论 ({comments.length})</h2>
 
-              {/* 发评论 */}
-              <div className="flex gap-2 mb-4">
-                <input
-                  value={commentText}
-                  onChange={e => setCommentText(e.target.value)}
-                  placeholder="说点什么..."
-                  className="flex-1 h-9 rounded-lg bg-white/5 border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                />
-                <button onClick={handleComment} className="px-4 h-9 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/80 transition-colors">
-                  发送
-                </button>
+              {/* 发评论 - 不需要登录 */}
+              <div className="mb-4 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    value={commentName}
+                    onChange={e => setCommentName(e.target.value)}
+                    placeholder="你的昵称（选填）"
+                    className="w-32 h-9 rounded-lg bg-white/5 border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                  />
+                  <input
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    placeholder="说点什么..."
+                    className="flex-1 h-9 rounded-lg bg-white/5 border border-border px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                    onKeyDown={e => e.key === 'Enter' && handleComment()}
+                  />
+                  <button onClick={handleComment} className="px-4 h-9 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/80 transition-colors">
+                    发送
+                  </button>
+                </div>
               </div>
 
               {/* 评论列表 */}
@@ -284,9 +307,9 @@ export default function ResourceDetailPage() {
                   <div key={c.id} className="p-3 rounded-lg bg-white/[0.02] border border-border/50">
                     <div className="flex items-center gap-2 mb-1">
                       <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-                        {c.username[0].toUpperCase()}
+                        {(c.author_name || '匿')[0].toUpperCase()}
                       </div>
-                      <span className="text-xs font-medium text-foreground">{c.username}</span>
+                      <span className="text-xs font-medium text-foreground">{c.author_name || '匿名用户'}</span>
                       <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
                     </div>
                     <p className="text-sm text-muted-foreground pl-8">{c.content}</p>
@@ -299,6 +322,16 @@ export default function ResourceDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* 相关资源 */}
+        {relatedResources.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-lg font-bold text-foreground mb-4">相关推荐</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {relatedResources.map(r => <ResourceCard key={r.id} resource={r} />)}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
