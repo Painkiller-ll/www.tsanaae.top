@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('resources')
       .select('*, category:resource_categories(id, name, slug)', { count: 'exact' })
-      .eq('is_published', true);
+      .eq('is_published', true)
+      .eq('status', 'approved');
 
     if (type && type !== 'all') query = query.eq('resource_type', type);
     if (category_id) query = query.eq('category_id', category_id);

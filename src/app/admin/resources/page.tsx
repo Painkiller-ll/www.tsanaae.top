@@ -21,6 +21,7 @@ export default function AdminResources() {
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -41,6 +42,7 @@ export default function AdminResources() {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (typeFilter) params.set('resource_type', typeFilter);
     if (search) params.set('search', search);
+    if (statusFilter) params.set('status', statusFilter);
 
     try {
       const res = await adminFetch(`/api/admin/resources?${params}`);
@@ -135,17 +137,48 @@ export default function AdminResources() {
     }
   };
 
+  const handleReview = async (id: number, action: 'approve' | 'reject') => {
+    const label = action === 'approve' ? '通过' : '拒绝';
+    if (!confirm(`确定${label}此投稿？`)) return;
+    try {
+      const res = await adminFetch(`/api/admin/resources/${id}/review`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) {
+        const data = await safeJson<{ error?: string }>(res);
+        alert(`操作失败: ${data.error || '未知错误'}`);
+        return;
+      }
+      fetchResources();
+    } catch (err) {
+      alert(`操作失败: ${err instanceof Error ? err.message : '网络错误'}`);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">资源管理</h1>
-        <Link href="/admin/resources/new" className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium">
-          + 新增资源
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/resources/new" className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium">
+            + 新增资源
+          </Link>
+        </div>
       </div>
 
       {/* 筛选栏 */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap items-center gap-3">
+        <select
+          value={statusFilter}
+          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white"
+        >
+          <option value="">全部状态</option>
+          <option value="pending">待审核</option>
+          <option value="approved">已通过</option>
+          <option value="rejected">已拒绝</option>
+        </select>
         <select
           value={typeFilter}
           onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
@@ -192,7 +225,8 @@ export default function AdminResources() {
                 <th className="px-4 py-3 text-left text-gray-600 font-medium">类型</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">评分</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">浏览</th>
-                <th className="px-4 py-3 text-center text-gray-600 font-medium">状态</th>
+                <th className="px-4 py-3 text-center text-gray-600 font-medium">审核</th>
+                <th className="px-4 py-3 text-center text-gray-600 font-medium">发布</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">精选</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">排序</th>
                 <th className="px-4 py-3 text-center text-gray-600 font-medium">操作</th>
@@ -219,6 +253,21 @@ export default function AdminResources() {
                   </td>
                   <td className="px-4 py-3 text-center text-gray-600">{r.avg_rating ?? '—'}</td>
                   <td className="px-4 py-3 text-center text-gray-600">{r.view_count ?? 0}</td>
+                  <td className="px-4 py-3 text-center">
+                    {r.status === 'pending' ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => handleReview(r.id, 'approve')} className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 hover:bg-green-200" title="通过审核">通过</button>
+                        <button onClick={() => handleReview(r.id, 'reject')} className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 hover:bg-red-200" title="拒绝">拒绝</button>
+                      </div>
+                    ) : (
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === 'approved' ? 'bg-green-100 text-green-700' : r.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {r.status === 'approved' ? '已通过' : r.status === 'rejected' ? '已拒绝' : r.status || '已通过'}
+                      </span>
+                    )}
+                    {r.submitter_name && r.submitter_name !== '匿名用户' && r.status === 'pending' && (
+                      <div className="text-xs text-gray-400 mt-0.5">投稿: {r.submitter_name}</div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => handleToggle(r.id, 'is_published', !r.is_published)}

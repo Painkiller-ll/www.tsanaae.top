@@ -9,6 +9,7 @@ export async function POST(request: Request) {
       music_tracks: [],
       articles_table: [],
       article_comments_table: [],
+      resources_table: [],
     };
 
     // === site_settings columns ===
@@ -88,6 +89,40 @@ export async function POST(request: Request) {
       results.article_comments_table.push('article_comments表不存在，需手动创建 - 请在Supabase SQL Editor执行创建SQL');
     } else {
       results.article_comments_table.push('article_comments表: ok');
+    }
+
+    // === resources table - 投稿相关列 ===
+    const { data: resCheck, error: resError } = await supabase
+      .from('resources')
+      .select('status')
+      .limit(1);
+
+    if (resError && (resError.message.includes('column') || resError.message.includes('does not exist'))) {
+      results.resources_table.push('status: 需手动添加 - ALTER TABLE resources ADD COLUMN status text DEFAULT \'approved\';');
+    } else {
+      results.resources_table.push('status: ok');
+    }
+
+    const { data: resCheck2, error: resError2 } = await supabase
+      .from('resources')
+      .select('download_url')
+      .limit(1);
+
+    if (resError2 && (resError2.message.includes('column') || resError2.message.includes('does not exist'))) {
+      results.resources_table.push('download_url: 需手动添加 - ALTER TABLE resources ADD COLUMN download_url text DEFAULT \'\';');
+    } else {
+      results.resources_table.push('download_url: ok');
+    }
+
+    const { data: resCheck3, error: resError3 } = await supabase
+      .from('resources')
+      .select('submitter_name')
+      .limit(1);
+
+    if (resError3 && (resError3.message.includes('column') || resError3.message.includes('does not exist'))) {
+      results.resources_table.push('submitter_name: 需手动添加 - ALTER TABLE resources ADD COLUMN submitter_name text DEFAULT \'\';');
+    } else {
+      results.resources_table.push('submitter_name: ok');
     }
 
     return NextResponse.json({

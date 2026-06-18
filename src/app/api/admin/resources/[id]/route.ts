@@ -46,7 +46,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const body = await request.json();
 
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
-    const allowedFields = ['title', 'description', 'cover_url', 'resource_type', 'category_id', 'author', 'tags', 'unlock_points', 'is_featured', 'is_published', 'extra_data', 'avg_rating', 'rating_count', 'sort_order'];
+    const allowedFields = ['title', 'description', 'cover_url', 'resource_type', 'category_id', 'author', 'tags', 'unlock_points', 'is_featured', 'is_published', 'extra_data', 'avg_rating', 'rating_count', 'sort_order', 'status', 'download_url', 'submitter_name', 'submitter_contact'];
     for (const field of allowedFields) {
       if (body[field] !== undefined) updates[field] = body[field];
     }

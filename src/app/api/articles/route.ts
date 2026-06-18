@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('articles')
-      .select('id, title, author_name, category, tags, is_featured, view_count, cover_image, created_at, updated_at', { count: 'exact' })
+      .select('id, title, content, author_name, category, tags, is_featured, view_count, cover_image, created_at, updated_at', { count: 'exact' })
       .eq('status', 'approved')
       .order('is_featured', { ascending: false })
       .order('created_at', { ascending: false });

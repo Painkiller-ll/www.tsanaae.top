@@ -92,7 +92,7 @@ export default function ArticlesPage() {
                       )}
                     </div>
                     <h3 className="text-white font-medium text-base mb-1 truncate">{article.title}</h3>
-                    <p className="text-gray-400 text-sm line-clamp-2">{article.content.substring(0, 100)}...</p>
+                    <p className="text-gray-400 text-sm line-clamp-2">{(article.content || '').substring(0, 100)}</p>
                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
                       <span>{article.author_name}</span>
                       <span>{new Date(article.created_at).toLocaleDateString()}</span>

@@ -229,14 +229,16 @@ export default function Header({ onOpenAuth }: HeaderProps) {
               <span>文章</span>
             </Link>
             <Link
-              href="/articles/submit"
+              href="/submit"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 rounded-lg hover:bg-green-500/10 font-semibold"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span>发布文章</span>
+              <span>投稿资源</span>
             </Link>
           </div>
         )}

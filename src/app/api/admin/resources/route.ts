@@ -14,16 +14,18 @@ export async function GET(request: Request) {
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
     const resourceType = searchParams.get('resource_type') || '';
     const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || '';
 
     let query = supabase
       .from('resources')
-      .select('id, title, resource_type, cover_url, avg_rating, rating_count, view_count, is_published, is_featured, sort_order, created_at', { count: 'exact' })
+      .select('id, title, resource_type, cover_url, avg_rating, rating_count, view_count, is_published, is_featured, sort_order, status, submitter_name, created_at', { count: 'exact' })
       .order('sort_order', { ascending: false })
       .order('created_at', { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
 
     if (resourceType) query = query.eq('resource_type', resourceType);
     if (search) query = query.ilike('title', `%${search}%`);
+    if (status) query = query.eq('status', status);
 
     const { data, error, count } = await query;
     if (error) throw error;
