@@ -26,15 +26,13 @@ export default function RecommendPage() {
     fetch('/api/site-settings')
       .then(r => r.json())
       .then(d => {
-        if (d.data) {
-          setSettings(prev => ({
-            promo_title: d.data.promo_title || prev.promo_title,
-            promo_description: d.data.promo_description || prev.promo_description,
-            promo_qr_code_url: d.data.promo_qr_code_url || prev.promo_qr_code_url,
-            promo_mini_program_name: d.data.promo_mini_program_name || prev.promo_mini_program_name,
-            promo_tags: d.data.promo_tags || prev.promo_tags,
-          }));
-        }
+        setSettings(prev => ({
+          promo_title: d.promo_title || prev.promo_title,
+          promo_description: d.promo_description || prev.promo_description,
+          promo_qr_code_url: d.promo_qr_code_url || prev.promo_qr_code_url,
+          promo_mini_program_name: d.promo_mini_program_name || prev.promo_mini_program_name,
+          promo_tags: d.promo_tags ? (typeof d.promo_tags === 'string' ? d.promo_tags.split(',').filter(Boolean) : d.promo_tags) : prev.promo_tags,
+        }));
       })
       .catch(() => {});
   }, []);
