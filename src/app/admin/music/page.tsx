@@ -40,6 +40,7 @@ export default function AdminMusicPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState('');
+  const [filterPlatform, setFilterPlatform] = useState<string>('all');
 
   // 手动添加
   const [newTitle, setNewTitle] = useState('');
@@ -330,18 +331,41 @@ export default function AdminMusicPage() {
 
             {searchResults.length > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-muted-foreground">找到 {searchResults.length} 首歌曲</p>
-                  <button
-                    onClick={addAllFromSearch}
-                    disabled={adding}
-                    className="px-4 py-1.5 text-sm rounded-lg bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 disabled:opacity-50 transition-colors"
-                  >
-                    一键全部添加
-                  </button>
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    找到 {filterPlatform === 'all' ? searchResults.length : searchResults.filter(s => s.platform === filterPlatform).length} 首歌曲
+                    {searchResults.length > 0 && (
+                      <span className="ml-2 text-xs text-zinc-500">
+                        (网易云{searchResults.filter(s => s.platform === 'netease').length}首 / 
+                        酷狗{searchResults.filter(s => s.platform === 'kugou').length}首 / 
+                        QQ{searchResults.filter(s => s.platform === 'qq').length}首)
+                      </span>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={filterPlatform}
+                      onChange={e => setFilterPlatform(e.target.value)}
+                      className="px-2 py-1 text-xs rounded-lg bg-secondary/50 border border-white/10 text-zinc-300"
+                    >
+                      <option value="all">全部平台</option>
+                      <option value="netease">网易云</option>
+                      <option value="kugou">酷狗</option>
+                      <option value="qq">QQ音乐</option>
+                    </select>
+                    <button
+                      onClick={addAllFromSearch}
+                      disabled={adding}
+                      className="px-4 py-1.5 text-sm rounded-lg bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 disabled:opacity-50 transition-colors"
+                    >
+                      一键全部添加
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
-                  {searchResults.map((song) => {
+                <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+                  {searchResults
+                    .filter(s => filterPlatform === 'all' || s.platform === filterPlatform)
+                    .map((song) => {
                     const added = (song as SearchResult & { added?: boolean }).added;
                     return (
                       <div
