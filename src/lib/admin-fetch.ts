@@ -28,9 +28,13 @@ async function parseResponse(res: Response): Promise<{ ok: boolean; status: numb
   return { ok: res.ok, status: res.status, data };
 }
 
-export async function adminFetch(url: string, options: RequestInit = {}): Promise<Response> {
+type AdminFetchBody = Record<string, unknown> | BodyInit | null | undefined;
+
+export async function adminFetch(url: string, options: Omit<RequestInit, 'body'> & { body?: AdminFetchBody } = {}): Promise<Response> {
   const token = getAdminToken();
-  const isFormData = options.body instanceof FormData;
+  const rawBody = options.body;
+  const isFormData = rawBody instanceof FormData;
+  const isPlainObject = rawBody != null && !isFormData && typeof rawBody === 'object' && !(rawBody instanceof ArrayBuffer) && !(rawBody instanceof Blob) && !ArrayBuffer.isView(rawBody) && typeof (rawBody as any).text !== 'function' && !(rawBody instanceof URLSearchParams) && !(rawBody instanceof ReadableStream);
   
   const headers: Record<string, string> = {};
   
@@ -50,9 +54,18 @@ export async function adminFetch(url: string, options: RequestInit = {}): Promis
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
+  // Auto JSON.stringify body if it's a plain object
+  let processedBody: BodyInit | null | undefined;
+  if (isPlainObject) {
+    processedBody = JSON.stringify(rawBody);
+  } else {
+    processedBody = rawBody as BodyInit | null | undefined;
+  }
+
   const res = await fetch(url, {
     ...options,
+    body: processedBody,
     headers,
   });
   
@@ -64,7 +77,7 @@ export async function adminFetch(url: string, options: RequestInit = {}): Promis
  */
 export async function adminFetchJSON<T = unknown>(
   url: string, 
-  options: RequestInit = {}
+  options: Omit<RequestInit, 'body'> & { body?: AdminFetchBody } = {}
 ): Promise<{ ok: boolean; status: number; data: T }> {
   const res = await adminFetch(url, options);
   return parseResponse(res) as Promise<{ ok: boolean; status: number; data: T }>;

@@ -36,9 +36,21 @@ export default function HomePage() {
   const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // 根据数据库分类动态加载资源
     fetch('/api/resource-categories?top_level=true')
       .then(r => r.json())
-      .then(d => { if (d.data) setCategories(d.data); })
+      .then(d => {
+        if (d.data) {
+          setCategories(d.data);
+          // 用数据库分类的slug加载资源（不再硬编码）
+          d.data.forEach((cat: ResourceCategory) => {
+            fetch(`/api/resources?type=${cat.slug}&limit=8&is_published=true`)
+              .then(r => r.json())
+              .then(rd => { if (rd.data) setResourcesByType(prev => ({ ...prev, [cat.slug]: rd.data })); })
+              .catch(() => {});
+          });
+        }
+      })
       .catch(() => {});
 
     fetch('/api/site-settings')
@@ -48,14 +60,6 @@ export default function HomePage() {
         setSettings(d);
       })
       .catch(() => {});
-
-    const types = ['study', 'movie', 'music', 'game', 'novel', 'software'];
-    types.forEach(type => {
-      fetch(`/api/resources?type=${type}&limit=8&is_published=true`)
-        .then(r => r.json())
-        .then(d => { if (d.data) setResourcesByType(prev => ({ ...prev, [type]: d.data })); })
-        .catch(() => {});
-    });
   }, []);
 
   return (
@@ -75,7 +79,8 @@ export default function HomePage() {
         <section className="mb-6 sm:mb-8">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
             {categories.map(cat => {
-              const style = CATEGORY_STYLES[cat.slug] || DEFAULT_STYLE;
+              const styleKey = cat.resource_type || cat.slug;
+              const style = CATEGORY_STYLES[styleKey] || DEFAULT_STYLE;
               const icon = cat.icon || style.icon;
               return (
                 <Link
