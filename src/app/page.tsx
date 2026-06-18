@@ -33,6 +33,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [resourcesByType, setResourcesByType] = useState<Record<string, Resource[]>>({});
   const [siteDesc, setSiteDesc] = useState('');
+  const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch('/api/resource-categories?top_level=true')
@@ -42,7 +43,10 @@ export default function HomePage() {
 
     fetch('/api/site-settings')
       .then(r => r.json())
-      .then(d => { if (d.site_description) setSiteDesc(d.site_description); })
+      .then(d => {
+        if (d.site_description) setSiteDesc(d.site_description);
+        setSettings(d);
+      })
       .catch(() => {});
 
     const types = ['study', 'movie', 'music', 'game', 'novel', 'software'];
@@ -94,6 +98,41 @@ export default function HomePage() {
             })}
           </div>
         </section>
+
+        {/* 关于/联系方式 */}
+        {(settings.about_text || settings.contact_qq || settings.contact_wechat || settings.contact_email || settings.contact_telegram || settings.contact_github) && (
+          <section className="mb-6 sm:mb-10 mt-6 sm:mt-10 rounded-xl sm:rounded-2xl border border-border bg-card p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">关于本站</h2>
+            {settings.about_text && <p className="text-sm text-muted-foreground mb-4">{settings.about_text}</p>}
+            <div className="flex flex-wrap gap-3 sm:gap-4">
+              {settings.contact_qq && (
+                <a href={`https://wpa.qq.com/msghd?uin=${settings.contact_qq}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <span>💬</span> QQ: {settings.contact_qq}
+                </a>
+              )}
+              {settings.contact_wechat && (
+                <span className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                  <span>📱</span> 微信: {settings.contact_wechat}
+                </span>
+              )}
+              {settings.contact_email && (
+                <a href={`mailto:${settings.contact_email}`} className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <span>📧</span> {settings.contact_email}
+                </a>
+              )}
+              {settings.contact_telegram && (
+                <a href={`https://t.me/${settings.contact_telegram}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <span>✈️</span> Telegram: {settings.contact_telegram}
+                </a>
+              )}
+              {settings.contact_github && (
+                <a href={`https://github.com/${settings.contact_github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <span>🐙</span> GitHub: {settings.contact_github}
+                </a>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* 各分类最新资源 */}
         {categories.map(cat => {

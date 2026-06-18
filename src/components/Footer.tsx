@@ -18,7 +18,7 @@ export default function Footer() {
   useEffect(() => {
     fetch('/api/site-settings')
       .then(r => r.json())
-      .then(d => { if (d.data) setSettings(d.data); })
+      .then(d => { setSettings(d); })
       .catch(() => {});
   }, []);
 
