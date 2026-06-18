@@ -41,16 +41,17 @@ export default function RightSidebar() {
         {!expanded ? (
           <button
             onClick={() => setExpanded(true)}
-            className="absolute left-0 top-4 -translate-x-full w-8 h-12 bg-card border border-border rounded-l-lg flex items-center justify-center hover:bg-accent transition-colors"
+            className="group absolute left-0 top-4 -translate-x-full h-14 px-2 bg-gradient-to-r from-yellow-500/20 to-yellow-400/10 border border-yellow-500/30 rounded-l-lg flex items-center justify-center gap-1 hover:from-yellow-500/30 hover:to-yellow-400/20 hover:border-yellow-400/50 transition-all shadow-lg shadow-yellow-500/10"
           >
-            <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            <svg className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            <span className="text-[10px] font-bold text-yellow-400/80 group-hover:text-yellow-300 writing-vertical tracking-widest" style={{ writingMode: 'vertical-rl' }}>音乐</span>
           </button>
         ) : (
           <div className="w-72 h-full border-l border-border bg-card/80 backdrop-blur-md overflow-y-auto">
             <div className="p-3 border-b border-border flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">快捷面板</span>
-              <button onClick={() => setExpanded(false)} className="p-1 rounded hover:bg-accent transition-colors">
-                <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              <button onClick={() => setExpanded(false)} className="p-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 hover:border-yellow-400/40 transition-colors group">
+                <svg className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </button>
             </div>
 
