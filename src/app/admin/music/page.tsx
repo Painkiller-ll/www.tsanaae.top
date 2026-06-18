@@ -26,6 +26,8 @@ interface SearchResult {
   url: string;
   type: 'embed' | 'direct';
   platform: string;
+  isFree: boolean;
+  duration: number;
 }
 
 export default function AdminMusicPage() {
@@ -86,7 +88,7 @@ export default function AdminMusicPage() {
     setSearchMessage('');
     setSearchResults([]);
     try {
-      const res = await fetch(`/api/music/search?keyword=${encodeURIComponent(searchKeyword)}&platform=netease`);
+      const res = await fetch(`/api/music/search?keyword=${encodeURIComponent(searchKeyword)}&platform=all`);
       const data = await safeJson<{ results?: SearchResult[]; error?: string; message?: string }>(res);
       if (data.error) {
         setSearchMessage(data.error);
@@ -299,7 +301,7 @@ export default function AdminMusicPage() {
           <div className="space-y-4">
             <div className="bg-purple-600/10 border border-purple-600/30 rounded-xl p-4">
               <p className="text-sm text-purple-300">
-                输入歌名或歌手名搜索，点击歌曲即可一键添加到音乐库。使用网易云外链播放器，免费歌曲可完整播放。
+                输入歌名或歌手名搜索，点击歌曲即可一键添加到音乐库。同时搜索网易云和酷狗音乐，免费歌曲可获取直链播放。
               </p>
             </div>
 
@@ -365,8 +367,21 @@ export default function AdminMusicPage() {
                           <p className="text-xs text-muted-foreground truncate">{song.artist}{song.album ? ` · ${song.album}` : ''}</p>
                         </div>
 
-                        {/* 平台标签 */}
-                        <span className="px-2 py-0.5 text-xs bg-purple-600/20 text-purple-400 rounded shrink-0">网易云</span>
+                        {/* 平台+免费标签 */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={`px-2 py-0.5 text-xs rounded ${
+                            song.platform === 'netease' ? 'bg-red-600/20 text-red-400' :
+                            song.platform === 'kugou' ? 'bg-blue-600/20 text-blue-400' :
+                            'bg-purple-600/20 text-purple-400'
+                          }`}>
+                            {song.platform === 'netease' ? '网易云' : song.platform === 'kugou' ? '酷狗' : song.platform}
+                          </span>
+                          {song.isFree ? (
+                            <span className="px-2 py-0.5 text-xs rounded bg-green-600/20 text-green-400">免费</span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-xs rounded bg-amber-600/20 text-amber-400">VIP</span>
+                          )}
+                        </div>
 
                         {/* 添加按钮 */}
                         {added ? (
