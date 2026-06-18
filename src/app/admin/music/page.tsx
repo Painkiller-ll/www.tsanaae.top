@@ -301,7 +301,7 @@ export default function AdminMusicPage() {
           <div className="space-y-4">
             <div className="bg-purple-600/10 border border-purple-600/30 rounded-xl p-4">
               <p className="text-sm text-purple-300">
-                输入歌名或歌手名搜索，点击歌曲即可一键添加到音乐库。同时搜索网易云和酷狗音乐，免费歌曲可获取直链播放。
+                输入歌名或歌手名搜索，点击歌曲即可一键添加到音乐库。同时搜索网易云、酷狗和QQ音乐，免费歌曲可获取直链播放。
               </p>
             </div>
 
@@ -372,9 +372,10 @@ export default function AdminMusicPage() {
                           <span className={`px-2 py-0.5 text-xs rounded ${
                             song.platform === 'netease' ? 'bg-red-600/20 text-red-400' :
                             song.platform === 'kugou' ? 'bg-blue-600/20 text-blue-400' :
+                            song.platform === 'qq' ? 'bg-cyan-600/20 text-cyan-400' :
                             'bg-purple-600/20 text-purple-400'
                           }`}>
-                            {song.platform === 'netease' ? '网易云' : song.platform === 'kugou' ? '酷狗' : song.platform}
+                            {song.platform === 'netease' ? '网易云' : song.platform === 'kugou' ? '酷狗' : song.platform === 'qq' ? 'QQ音乐' : song.platform}
                           </span>
                           {song.isFree ? (
                             <span className="px-2 py-0.5 text-xs rounded bg-green-600/20 text-green-400">免费</span>

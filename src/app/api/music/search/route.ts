@@ -36,6 +36,11 @@ export async function GET(request: NextRequest) {
       promises.push(searchKugou(keyword).then((r) => { results.push(...r); }));
     }
 
+    // QQ音乐搜索
+    if (platform === 'all' || platform === 'qq') {
+      promises.push(searchQQ(keyword).then((r) => { results.push(...r); }));
+    }
+
     await Promise.allSettled(promises);
 
     // 去重(按歌名+歌手)
@@ -105,6 +110,137 @@ async function searchNetease(keyword: string) {
     }
   } catch (err) {
     console.error('[music search] netease error:', err);
+  }
+
+  return results;
+}
+
+// QQ音乐搜索 - 使用嵌入播放器
+async function searchQQ(keyword: string) {
+  const results: Array<{
+    id: string; title: string; artist: string; album: string;
+    cover: string; url: string; duration: number;
+    type: 'embed' | 'direct'; platform: string; isFree: boolean;
+  }> = [];
+
+  try {
+    const searchUrl = `https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w=${encodeURIComponent(keyword)}&format=json&p=1&n=20`;
+    const resp = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://y.qq.com/',
+      },
+    });
+    const text = await resp.text();
+    let data: Record<string, unknown>;
+    try { data = JSON.parse(text); } catch { return results; }
+
+    const songList = ((data?.data as Record<string, unknown>)?.song as Record<string, unknown>)?.list as Array<Record<string, unknown>> | undefined;
+    if (!songList || !Array.isArray(songList)) return results;
+
+    for (const song of songList.slice(0, 15)) {
+      const songName = (song.songname as string) || '';
+      const singers = (song.singer as Array<Record<string, string>>)?.map((s) => s.name).join('/') || '';
+      const albumName = (song.albumname as string) || '';
+      const songMid = (song.songmid as string) || '';
+      const albumMid = (song.albummid as string) || '';
+      const interval = (song.interval as number) || 0;
+      const payInfo = song.pay as Record<string, number> | undefined;
+      const isFree = payInfo ? payInfo.payplay === 0 : true;
+
+      // QQ音乐封面图
+      const coverUrl = albumMid
+        ? `https://y.gtimg.cn/music/photo_new/T002R150x150M000${albumMid}.jpg`
+        : '';
+
+      // QQ音乐歌曲页面链接（嵌入播放用）
+      const pageUrl = `https://y.qq.com/n/ryqq/songDetail/${songMid}`;
+
+      results.push({
+        id: `qq_${songMid}`,
+        title: songName,
+        artist: singers,
+        album: albumName,
+        cover: coverUrl,
+        url: pageUrl,
+        duration: interval,
+        type: 'embed',
+        platform: 'qq',
+        isFree,
+      });
+    }
+
+    // 对免费歌曲尝试获取直链
+    const freeSongs = results.filter((r) => r.isFree);
+    const urlPromises = freeSongs.map(async (song) => {
+      try {
+        const songMid = song.id.replace('qq_', '');
+        // 尝试获取歌曲详情来拿到播放链接
+        const detailUrl = `https://shc.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg?songmid=${songMid}&platform=yqq&format=json`;
+        const resp = await fetch(detailUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Referer': 'https://y.qq.com/',
+          },
+        });
+        const data = await resp.json() as Record<string, unknown>;
+        const songs = data.data as Array<Record<string, unknown>> | undefined;
+        if (songs && songs.length > 0) {
+          const file = songs[0].file as Record<string, unknown> | undefined;
+          if (file) {
+            const mediaMid = (file.media_mid as string) || songMid;
+            // 构建文件名
+            const filename = `M500${mediaMid}.mp3`;
+            // 尝试获取vkey
+            const vkeyUrl = `https://u.y.qq.com/cgi-bin/musicu.fcg?data=${encodeURIComponent(JSON.stringify({
+              comm: { ct: 19, cv: '1859', uin: '0' },
+              req_0: {
+                method: 'CgiGetVkeyServer',
+                module: 'vkey.GetVkeyServer',
+                param: {
+                  filename: [filename],
+                  guid: '100000',
+                  loginflag: 1,
+                  platform: '20',
+                  songmid: [songMid],
+                  songtype: [0],
+                  uin: '0',
+                },
+              },
+            }))}`;
+            const vkeyResp = await fetch(vkeyUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': 'https://y.qq.com/',
+                'Origin': 'https://y.qq.com',
+              },
+            });
+            const vkeyData = await vkeyResp.json() as Record<string, unknown>;
+            const req0 = vkeyData.req_0 as Record<string, unknown> | undefined;
+            if (req0 && req0.code === 0) {
+              const vkeyInfo = req0.data as Record<string, unknown> | undefined;
+              if (vkeyInfo) {
+                const sip = vkeyInfo.sip as Array<string> | undefined;
+                const midurlinfo = vkeyInfo.midurlinfo as Array<Record<string, string>> | undefined;
+                if (sip && sip.length > 0 && midurlinfo && midurlinfo.length > 0 && midurlinfo[0].purl) {
+                  const playUrl = `${sip[0]}${midurlinfo[0].purl}`;
+                  if (playUrl.startsWith('http')) {
+                    song.url = playUrl;
+                    song.type = 'direct';
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch {
+        // 忽略单个歌曲获取失败，保留embed链接
+      }
+    });
+
+    await Promise.allSettled(urlPromises);
+  } catch (err) {
+    console.error('[music search] qq error:', err);
   }
 
   return results;
