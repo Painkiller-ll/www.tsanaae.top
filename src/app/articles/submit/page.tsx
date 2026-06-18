@@ -1,7 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+
+interface TopCategory {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string | null;
+}
 
 export default function SubmitArticlePage() {
   const [title, setTitle] = useState('');
@@ -13,6 +20,17 @@ export default function SubmitArticlePage() {
   const [coverImage, setCoverImage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [topCategories, setTopCategories] = useState<TopCategory[]>([]);
+
+  useEffect(() => {
+    fetch('/api/resource-categories?parent_id=null')
+      .then(r => r.json())
+      .then(data => {
+        const cats = Array.isArray(data) ? data : (data.data && Array.isArray(data.data) ? data.data : []);
+        setTopCategories(cats);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,12 +152,9 @@ export default function SubmitArticlePage() {
                 className="w-full px-4 py-2.5 rounded-lg border border-purple-500/50 bg-[#1a1a24] text-purple-300 focus:outline-none focus:border-purple-400 [&>option]:bg-[#1a1a24] [&>option]:text-gray-200"
               >
                 <option value="">请选择分类（可选）</option>
-                <option value="学习资料">学习资料</option>
-                <option value="影视剧">影视剧</option>
-                <option value="音乐">音乐</option>
-                <option value="游戏">游戏</option>
-                <option value="小说">小说</option>
-                <option value="实用软件">实用软件</option>
+                {topCategories.map(c => (
+                  <option key={c.id} value={c.name}>{c.icon ? c.icon + ' ' : ''}{c.name}</option>
+                ))}
                 <option value="其他">其他</option>
               </select>
             </div>
