@@ -20,22 +20,32 @@ const DEFAULT_SETTINGS: PromoSettings = {
 };
 
 export default function RecommendPage() {
-  const [settings, setSettings] = useState<PromoSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<PromoSettings | null>(null);
 
   useEffect(() => {
     fetch('/api/site-settings')
       .then(r => r.json())
       .then(d => {
-        setSettings(prev => ({
-          promo_title: d.promo_title || prev.promo_title,
-          promo_description: d.promo_description || prev.promo_description,
-          promo_qr_code_url: d.promo_qr_code_url || prev.promo_qr_code_url,
-          promo_mini_program_name: d.promo_mini_program_name || prev.promo_mini_program_name,
-          promo_tags: d.promo_tags ? (typeof d.promo_tags === 'string' ? d.promo_tags.split(',').filter(Boolean) : d.promo_tags) : prev.promo_tags,
-        }));
+        setSettings({
+          promo_title: d.promo_title || '推荐小程序',
+          promo_description: d.promo_description || '扫码体验精选小程序，支持站长持续更新优质资源',
+          promo_qr_code_url: d.promo_qr_code_url || '',
+          promo_mini_program_name: d.promo_mini_program_name || '',
+          promo_tags: d.promo_tags ? (typeof d.promo_tags === 'string' ? d.promo_tags.split(',').filter(Boolean) : d.promo_tags) : ['免费资源', '收益支持'],
+        });
       })
-      .catch(() => {});
+      .catch(() => {
+        setSettings(DEFAULT_SETTINGS);
+      });
   }, []);
+
+  if (!settings) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f13' }}>
+        <div className="text-zinc-500 text-sm">加载中...</div>
+      </div>
+    );
+  }
 
   const tagColors: Record<string, { bg: string; border: string; text: string }> = {
     '免费资源': { bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-300' },
