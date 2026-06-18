@@ -2,122 +2,96 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import PageHeader from '@/components/PageHeader';
-import Link from 'next/link';
 
 interface SiteSettings {
-  site_name?: string;
-  contact_qq?: string;
-  contact_wechat?: string;
-  contact_email?: string;
-  contact_telegram?: string;
-  contact_github?: string;
-  about_text?: string;
-  wechat_qr_code?: string;
+  site_name: string;
+  contact_qq: string;
+  contact_wechat: string;
+  contact_email: string;
+  contact_telegram: string;
+  contact_github: string;
+  wechat_qr_code: string;
+  about_text: string;
 }
 
 export default function ContactPage() {
-  const [settings, setSettings] = useState<SiteSettings>({});
-  const [copied, setCopied] = useState('');
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
     fetch('/api/settings')
-      .then(res => res.json())
-      .then(data => setSettings(data.settings || {}))
+      .then(async (res) => {
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return null; }
+      })
+      .then(data => { if (data) setSettings(data); })
       .catch(() => {});
   }, []);
 
-  const copyText = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(label);
-      setTimeout(() => setCopied(''), 2000);
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopied(label);
-      setTimeout(() => setCopied(''), 2000);
-    }
-  };
-
-  const contacts = [
-    { key: 'qq', label: 'QQ', value: settings.contact_qq, icon: '💬', color: 'from-blue-500 to-blue-600' },
-    { key: 'wechat', label: '微信', value: settings.contact_wechat, icon: '💚', color: 'from-green-500 to-green-600' },
-    { key: 'email', label: '邮箱', value: settings.contact_email, icon: '📧', color: 'from-red-500 to-red-600' },
-    { key: 'telegram', label: 'Telegram', value: settings.contact_telegram, icon: '✈️', color: 'from-sky-400 to-sky-600' },
-    { key: 'github', label: 'GitHub', value: settings.contact_github, icon: '🐙', color: 'from-gray-600 to-gray-800' },
-  ].filter(c => c.value);
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <Header />
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <PageHeader title="联系我们" breadcrumbs={[{ label: '首页', href: '/' }]} />
+        <h1 className="text-2xl font-bold mb-8">联系我们</h1>
 
-        {/* 关于我们 */}
-        {settings.about_text && (
-          <div className="bg-card rounded-xl border border-border p-6 mb-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">关于 {settings.site_name || 'Tsanaae Game'}</h2>
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{settings.about_text}</p>
-          </div>
-        )}
-
-        {/* 联系方式 */}
-        {contacts.length > 0 && (
-          <div className="bg-card rounded-xl border border-border p-6 mb-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">联系方式</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {contacts.map(c => (
-                <div
-                  key={c.key}
-                  className="flex items-center gap-4 bg-secondary/30 rounded-lg p-4 border border-border hover:border-purple-500/50 transition-colors"
-                >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center text-xl shrink-0`}>
-                    {c.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-muted-foreground">{c.label}</div>
-                    <div className="text-foreground font-medium truncate">{c.value}</div>
-                  </div>
-                  <button
-                    onClick={() => copyText(c.value!, c.label)}
-                    className="text-xs px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors shrink-0"
-                  >
-                    {copied === c.label ? '已复制' : '复制'}
-                  </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 联系方式卡片 */}
+          <div className="bg-[var(--card)] rounded-xl p-6 border border-[var(--border)]">
+            <h2 className="text-lg font-semibold mb-4">联系方式</h2>
+            <div className="space-y-4">
+              {settings?.contact_qq && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[var(--muted-foreground)]">QQ</span>
+                  <span>{settings.contact_qq}</span>
                 </div>
-              ))}
+              )}
+              {settings?.contact_wechat && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[var(--muted-foreground)]">微信</span>
+                  <span>{settings.contact_wechat}</span>
+                </div>
+              )}
+              {settings?.contact_email && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[var(--muted-foreground)]">邮箱</span>
+                  <a href={`mailto:${settings.contact_email}`} className="text-[var(--primary)] hover:underline">{settings.contact_email}</a>
+                </div>
+              )}
+              {settings?.contact_telegram && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[var(--muted-foreground)]">Telegram</span>
+                  <span>{settings.contact_telegram}</span>
+                </div>
+              )}
+              {settings?.contact_github && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[var(--muted-foreground)]">GitHub</span>
+                  <a href={`https://github.com/${settings.contact_github}`} target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">{settings.contact_github}</a>
+                </div>
+              )}
+              {!settings?.contact_qq && !settings?.contact_wechat && !settings?.contact_email && !settings?.contact_telegram && !settings?.contact_github && (
+                <p className="text-[var(--muted-foreground)] text-sm">暂未设置联系方式</p>
+              )}
             </div>
           </div>
-        )}
 
-        {/* 微信二维码 */}
-        {settings.wechat_qr_code && (
-          <div className="bg-card rounded-xl border border-border p-6 mb-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">微信二维码</h2>
-            <div className="flex justify-center">
-              <img
-                src={settings.wechat_qr_code}
-                alt="微信二维码"
-                className="w-48 h-48 rounded-lg object-cover"
-              />
+          {/* 关于本站 */}
+          <div className="bg-[var(--card)] rounded-xl p-6 border border-[var(--border)]">
+            <h2 className="text-lg font-semibold mb-4">关于本站</h2>
+            {settings?.about_text ? (
+              <p className="text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">{settings.about_text}</p>
+            ) : (
+              <p className="text-[var(--muted-foreground)] text-sm">暂未设置站点介绍</p>
+            )}
+          </div>
+
+          {/* 微信二维码 */}
+          {settings?.wechat_qr_code && (
+            <div className="bg-[var(--card)] rounded-xl p-6 border border-[var(--border)] md:col-span-2">
+              <h2 className="text-lg font-semibold mb-4">微信二维码</h2>
+              <img src={settings.wechat_qr_code} alt="微信二维码" className="w-48 h-48 object-contain rounded-lg" />
             </div>
-            <p className="text-center text-muted-foreground text-sm mt-3">扫描二维码添加微信</p>
-          </div>
-        )}
-
-        {/* 无信息提示 */}
-        {contacts.length === 0 && !settings.about_text && !settings.wechat_qr_code && (
-          <div className="bg-card rounded-xl border border-border p-12 text-center">
-            <div className="text-4xl mb-4">📬</div>
-            <h3 className="text-lg font-medium text-foreground mb-2">暂无联系方式</h3>
-            <p className="text-muted-foreground">站长尚未设置联系方式，请稍后再来查看</p>
-          </div>
-        )}
+          )}
+        </div>
       </main>
     </div>
   );

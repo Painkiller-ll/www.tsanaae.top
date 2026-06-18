@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import RightSidebar from '@/components/RightSidebar';
 
 import ThemeProvider from '@/components/ThemeProvider';
+import SiteSettingsLoader from '@/components/SiteSettingsLoader';
 
 export const metadata: Metadata = {
   title: {
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="zh-CN" className="light">
       <body className={`antialiased min-h-screen bg-background flex flex-col`}>
         <ThemeProvider>
+          <SiteSettingsLoader />
           {isDev && <Inspector />}
           <div className="flex-1">{children}</div>
           <Footer />

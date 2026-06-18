@@ -32,11 +32,17 @@ const DEFAULT_STYLE: CategoryStyle = {
 export default function HomePage() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [resourcesByType, setResourcesByType] = useState<Record<string, Resource[]>>({});
+  const [siteDesc, setSiteDesc] = useState('');
 
   useEffect(() => {
     fetch('/api/resource-categories?top_level=true')
       .then(r => r.json())
       .then(d => { if (d.data) setCategories(d.data); })
+      .catch(() => {});
+
+    fetch('/api/site-settings')
+      .then(r => r.json())
+      .then(d => { if (d.site_description) setSiteDesc(d.site_description); })
       .catch(() => {});
 
     const types = ['study', 'movie', 'music', 'game', 'novel', 'software'];
@@ -53,6 +59,13 @@ export default function HomePage() {
       <Header />
       <main className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         <AnnouncementBar />
+
+        {/* 站点描述 */}
+        {siteDesc && (
+          <section className="mb-6 sm:mb-8 text-center">
+            <p className="text-muted-foreground text-sm sm:text-base">{siteDesc}</p>
+          </section>
+        )}
 
         {/* 6大分类入口 - 移动端2列，平板3列，桌面6列 */}
         <section className="mb-6 sm:mb-8">

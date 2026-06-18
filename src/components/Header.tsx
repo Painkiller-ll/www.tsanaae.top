@@ -11,6 +11,7 @@ interface HeaderProps {
 
 interface SiteInfo {
   site_name: string;
+  site_logo_url?: string;
 }
 
 export default function Header({ onOpenAuth }: HeaderProps) {
@@ -56,6 +57,7 @@ export default function Header({ onOpenAuth }: HeaderProps) {
   };
 
   const siteName = siteInfo?.site_name || 'Tsanaae';
+  const siteLogoUrl = siteInfo?.site_logo_url;
 
   // 获取分类的图标和颜色
   const getCategoryStyle = (cat: ResourceCategory) => {
@@ -75,11 +77,15 @@ export default function Header({ onOpenAuth }: HeaderProps) {
         <div className="flex h-14 items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-            </div>
+            {siteLogoUrl ? (
+              <img src={siteLogoUrl} alt={siteName} className="h-7 w-7 rounded-lg object-cover" />
+            ) : (
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+              </div>
+            )}
             <span className="text-base font-bold gradient-text hidden sm:inline">{siteName}</span>
           </Link>
 
