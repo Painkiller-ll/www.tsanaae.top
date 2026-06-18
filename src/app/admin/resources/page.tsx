@@ -4,15 +4,18 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { adminFetch, safeJson } from '@/lib/admin-fetch';
 
-const TYPE_LABELS: Record<string, string> = {
-  study: '学习资料', movie: '影视剧', music: '音乐',
-  game: '游戏', novel: '小说', software: '实用软件',
-};
-
 const TYPE_COLORS: Record<string, string> = {
   study: 'bg-blue-100 text-blue-700', movie: 'bg-red-100 text-red-700', music: 'bg-pink-100 text-pink-700',
   game: 'bg-violet-100 text-violet-700', novel: 'bg-green-100 text-green-700', software: 'bg-orange-100 text-orange-700',
 };
+
+interface TopCategory {
+  id: number;
+  name: string;
+  slug: string;
+  resource_type: string;
+  icon: string | null;
+}
 
 export default function AdminResources() {
   const [resources, setResources] = useState<any[]>([]);
@@ -22,7 +25,16 @@ export default function AdminResources() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [topCategories, setTopCategories] = useState<TopCategory[]>([]);
   const pageSize = 20;
+
+  // 加载顶级分类
+  useEffect(() => {
+    fetch('/api/resource-categories?top_level=true')
+      .then(r => r.json())
+      .then(d => { if (d.data) setTopCategories(d.data); })
+      .catch(() => {});
+  }, []);
 
   const fetchResources = useCallback(async () => {
     setLoading(true);
@@ -140,7 +152,7 @@ export default function AdminResources() {
           className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white"
         >
           <option value="">全部类型</option>
-          {Object.entries(TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          {topCategories.map(c => <option key={c.id} value={c.resource_type || c.slug}>{c.icon} {c.name}</option>)}
         </select>
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <input
@@ -202,7 +214,7 @@ export default function AdminResources() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${TYPE_COLORS[r.resource_type] || 'bg-gray-100 text-gray-600'}`}>
-                      {TYPE_LABELS[r.resource_type] || r.resource_type}
+                      {topCategories.find(c => c.resource_type === r.resource_type || c.slug === r.resource_type)?.name || r.resource_type}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center text-gray-600">{r.avg_rating ?? '—'}</td>

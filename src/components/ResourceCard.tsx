@@ -10,16 +10,14 @@ const TYPE_COLORS: Record<string, string> = {
   game: 'bg-purple-500/20 text-purple-400',
   novel: 'bg-emerald-500/20 text-emerald-400',
   software: 'bg-amber-500/20 text-amber-400',
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  study: '学习', movie: '影视', music: '音乐',
-  game: '游戏', novel: '小说', software: '软件',
+  // 扩展颜色
+  cat: 'bg-cyan-500/20 text-cyan-400',
 };
 
 export default function ResourceCard({ resource }: { resource: Resource }) {
   const colorClass = TYPE_COLORS[resource.resource_type] || 'bg-gray-500/20 text-gray-400';
-  const typeLabel = TYPE_LABELS[resource.resource_type] || resource.resource_type;
+  // 直接用 resource_type 显示，如果是旧类型则用中文简称
+  const typeLabel = resource.resource_type;
 
   return (
     <Link href={`/resource/${resource.id}`} className="group block">

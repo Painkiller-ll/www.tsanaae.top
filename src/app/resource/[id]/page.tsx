@@ -115,7 +115,7 @@ export default function ResourceDetailPage() {
     );
   }
 
-  const typeConfig = DEFAULT_RESOURCE_TYPES[resource.resource_type as ResourceType];
+  const typeConfig = DEFAULT_RESOURCE_TYPES[resource.resource_type as ResourceType] || { label: resource.resource_type, icon: '📁' };
   const extra = resource.extra_data as Record<string, string>;
 
   return (

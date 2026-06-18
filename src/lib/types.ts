@@ -1,7 +1,7 @@
 // 资源类型 - 动态从数据库获取，这里仅作参考值
 export type ResourceType = string;
 
-// 资源类型默认配置（仅当数据库没有配置时使用）
+// 资源类型旧版默认配置（仅作为 DEFAULT_COVERS 等旧功能的后备，新代码请从数据库动态读取）
 export const DEFAULT_RESOURCE_TYPES: Record<string, { label: string; icon: string; color: string; gradient: string }> = {
   study: { label: '学习资料', icon: '📚', color: '#3b82f6', gradient: 'from-blue-500 to-blue-700' },
   movie: { label: '影视剧', icon: '🎬', color: '#ef4444', gradient: 'from-red-500 to-red-700' },

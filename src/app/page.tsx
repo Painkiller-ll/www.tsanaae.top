@@ -15,19 +15,37 @@ interface CategoryStyle {
   icon: string;
 }
 
-const CATEGORY_STYLES: Record<string, CategoryStyle> = {
-  study:    { gradient: 'from-blue-500 to-blue-700',   bgLight: 'bg-blue-50 dark:bg-blue-500/10',  border: 'border-blue-200 dark:border-blue-500/20',  text: 'text-blue-600 dark:text-blue-400',  icon: '📚' },
-  movie:    { gradient: 'from-red-500 to-red-700',     bgLight: 'bg-red-50 dark:bg-red-500/10',    border: 'border-red-200 dark:border-red-500/20',    text: 'text-red-600 dark:text-red-400',    icon: '🎬' },
-  music:    { gradient: 'from-pink-500 to-pink-700',   bgLight: 'bg-pink-50 dark:bg-pink-500/10',  border: 'border-pink-200 dark:border-pink-500/20',  text: 'text-pink-600 dark:text-pink-400',  icon: '🎵' },
-  game:     { gradient: 'from-purple-500 to-purple-700',bgLight:'bg-purple-50 dark:bg-purple-500/10',border:'border-purple-200 dark:border-purple-500/20',text:'text-purple-600 dark:text-purple-400',icon: '🎮' },
-  novel:    { gradient: 'from-emerald-500 to-emerald-700',bgLight:'bg-emerald-50 dark:bg-emerald-500/10',border:'border-emerald-200 dark:border-emerald-500/20',text:'text-emerald-600 dark:text-emerald-400',icon: '📖' },
-  software: { gradient: 'from-amber-500 to-amber-700', bgLight: 'bg-amber-50 dark:bg-amber-500/10', border: 'border-amber-200 dark:border-amber-500/20',  text: 'text-amber-600 dark:text-amber-400', icon: '💻' },
+/** 动态颜色调色板 - 新分类自动循环分配 */
+const COLOR_PALETTE: CategoryStyle[] = [
+  { gradient: 'from-blue-500 to-blue-700',     bgLight: 'bg-blue-50 dark:bg-blue-500/10',   border: 'border-blue-200 dark:border-blue-500/20',   text: 'text-blue-600 dark:text-blue-400',   icon: '📚' },
+  { gradient: 'from-red-500 to-red-700',       bgLight: 'bg-red-50 dark:bg-red-500/10',     border: 'border-red-200 dark:border-red-500/20',     text: 'text-red-600 dark:text-red-400',     icon: '🎬' },
+  { gradient: 'from-pink-500 to-pink-700',     bgLight: 'bg-pink-50 dark:bg-pink-500/10',   border: 'border-pink-200 dark:border-pink-500/20',   text: 'text-pink-600 dark:text-pink-400',   icon: '🎵' },
+  { gradient: 'from-purple-500 to-purple-700', bgLight: 'bg-purple-50 dark:bg-purple-500/10',border: 'border-purple-200 dark:border-purple-500/20',text: 'text-purple-600 dark:text-purple-400',icon: '🎮' },
+  { gradient: 'from-emerald-500 to-emerald-700',bgLight:'bg-emerald-50 dark:bg-emerald-500/10',border:'border-emerald-200 dark:border-emerald-500/20',text:'text-emerald-600 dark:text-emerald-400',icon: '📖' },
+  { gradient: 'from-amber-500 to-amber-700',   bgLight: 'bg-amber-50 dark:bg-amber-500/10', border: 'border-amber-200 dark:border-amber-500/20', text: 'text-amber-600 dark:text-amber-400', icon: '💻' },
+  { gradient: 'from-cyan-500 to-cyan-700',     bgLight: 'bg-cyan-50 dark:bg-cyan-500/10',   border: 'border-cyan-200 dark:border-cyan-500/20',   text: 'text-cyan-600 dark:text-cyan-400',   icon: '🔮' },
+  { gradient: 'from-rose-500 to-rose-700',     bgLight: 'bg-rose-50 dark:bg-rose-500/10',   border: 'border-rose-200 dark:border-rose-500/20',   text: 'text-rose-600 dark:text-rose-400',   icon: '💎' },
+  { gradient: 'from-teal-500 to-teal-700',     bgLight: 'bg-teal-50 dark:bg-teal-500/10',   border: 'border-teal-200 dark:border-teal-500/20',   text: 'text-teal-600 dark:text-teal-400',   icon: '🌿' },
+  { gradient: 'from-orange-500 to-orange-700', bgLight: 'bg-orange-50 dark:bg-orange-500/10',border: 'border-orange-200 dark:border-orange-500/20',text: 'text-orange-600 dark:text-orange-400',icon: '🔥' },
+];
+
+/** 兼容旧 slug 的映射（已有的旧分类保留原配色） */
+const LEGACY_STYLES: Record<string, CategoryStyle> = {
+  study:    COLOR_PALETTE[0],
+  movie:    COLOR_PALETTE[1],
+  music:    COLOR_PALETTE[2],
+  game:     COLOR_PALETTE[3],
+  novel:    COLOR_PALETTE[4],
+  software: COLOR_PALETTE[5],
 };
 
-const DEFAULT_STYLE: CategoryStyle = {
-  gradient: 'from-gray-500 to-gray-700', bgLight: 'bg-gray-50 dark:bg-gray-500/10',
-  border: 'border-gray-200 dark:border-gray-500/20', text: 'text-gray-600 dark:text-gray-400', icon: '📁',
-};
+/** 根据 sort_order 获取分类样式 */
+function getCategoryStyle(cat: ResourceCategory, index: number): CategoryStyle {
+  // 优先用旧映射（已有分类保持配色不变）
+  if (LEGACY_STYLES[cat.slug]) return LEGACY_STYLES[cat.slug];
+  // 否则从调色板循环取色
+  return COLOR_PALETTE[index % COLOR_PALETTE.length];
+}
 
 /** 分类网格 - 超过一行时支持折叠/展开 */
 function CategoryGrid({ categories, resourcesByType }: {
@@ -72,8 +90,8 @@ function CategoryGrid({ categories, resourcesByType }: {
             );
           }
           const cat = (item as { isPromo: false; cat: ResourceCategory }).cat;
-          const styleKey = cat.resource_type || cat.slug;
-          const style = CATEGORY_STYLES[styleKey] || DEFAULT_STYLE;
+          const catIndex = categories.indexOf(cat);
+          const style = getCategoryStyle(cat, catIndex);
           const icon = cat.icon || style.icon;
           return (
             <Link

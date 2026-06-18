@@ -26,12 +26,40 @@ export async function POST(request: Request) {
     const supabase = getSupabaseClient();
     const body = await request.json();
 
+    // 自动生成 slug（如果未提供）
+    let slug = body.slug;
+    if (!slug) {
+      const name = body.name || '';
+      if (/^[a-zA-Z0-9-]+$/.test(name)) {
+        slug = name.toLowerCase().replace(/\s+/g, '-');
+      } else {
+        slug = `cat-${Date.now().toString(36)}`;
+      }
+    }
+
+    // 自动设置 resource_type（如果未提供）
+    let resource_type = body.resource_type;
+    if (!resource_type) {
+      if (body.parent_id) {
+        // 子分类：继承父分类的 resource_type
+        const { data: parent } = await supabase
+          .from('resource_categories')
+          .select('resource_type, slug')
+          .eq('id', body.parent_id)
+          .single();
+        resource_type = parent?.resource_type || parent?.slug || slug;
+      } else {
+        // 顶级分类：resource_type = slug
+        resource_type = slug;
+      }
+    }
+
     const { data, error } = await supabase
       .from('resource_categories')
       .insert({
         name: body.name,
-        slug: body.slug,
-        resource_type: body.resource_type,
+        slug,
+        resource_type,
         parent_id: body.parent_id || null,
         icon: body.icon || null,
         sort_order: body.sort_order || 0,

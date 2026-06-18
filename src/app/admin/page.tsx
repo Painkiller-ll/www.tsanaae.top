@@ -13,21 +13,33 @@ interface DashboardStats {
   recentResources: Array<{ id: number; title: string; resource_type: string; created_at: string }>;
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  study: '学习资料', movie: '影视剧', music: '音乐',
-  game: '游戏', novel: '小说', software: '实用软件',
-};
+interface TopCategory {
+  id: number;
+  name: string;
+  slug: string;
+  resource_type: string;
+  icon: string | null;
+}
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [topCategories, setTopCategories] = useState<TopCategory[]>([]);
 
   useEffect(() => {
     adminFetch('/api/admin/stats').then(r => r.json()).then(data => {
       setStats(data);
       setLoading(false);
     }).catch(() => setLoading(false));
+    // 动态加载分类
+    fetch('/api/resource-categories?top_level=true')
+      .then(r => r.json())
+      .then(d => { if (d.data) setTopCategories(d.data); })
+      .catch(() => {});
   }, []);
+
+  // 获取分类名称
+  const getTypeName = (type: string) => topCategories.find(c => c.resource_type === type || c.slug === type)?.name || type;
 
   if (loading) return <div className="text-center py-20 text-gray-400">加载中...</div>;
 
@@ -47,10 +59,10 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h2 className="text-base font-semibold text-gray-800 mb-4">各类型资源统计</h2>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-          {Object.entries(TYPE_LABELS).map(([type, label]) => (
-            <div key={type} className="text-center p-3 rounded-lg bg-gray-50">
-              <div className="text-2xl font-bold text-gray-800">{stats?.resourcesByType?.[type] ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">{label}</div>
+          {topCategories.map(cat => (
+            <div key={cat.id} className="text-center p-3 rounded-lg bg-gray-50">
+              <div className="text-2xl font-bold text-gray-800">{stats?.resourcesByType?.[cat.resource_type || cat.slug] ?? 0}</div>
+              <div className="text-xs text-gray-500 mt-1">{cat.icon} {cat.name}</div>
             </div>
           ))}
         </div>
@@ -84,7 +96,7 @@ export default function AdminDashboard() {
               <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <div className="flex items-center gap-3">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                    {TYPE_LABELS[r.resource_type] || r.resource_type}
+                    {getTypeName(r.resource_type)}
                   </span>
                   <Link href={`/admin/resources/${r.id}/edit`} className="text-sm text-gray-700 hover:text-violet-600">
                     {r.title}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { DEFAULT_RESOURCE_TYPES, type ResourceCategory } from '@/lib/types';
+import { type ResourceCategory } from '@/lib/types';
 import { useTheme } from '@/components/ThemeProvider';
 
 interface HeaderProps {
@@ -59,16 +59,9 @@ export default function Header({ onOpenAuth }: HeaderProps) {
   const siteName = siteInfo?.site_name || 'Tsanaae';
   const siteLogoUrl = siteInfo?.site_logo_url;
 
-  // 获取分类的图标和颜色
-  const getCategoryStyle = (cat: ResourceCategory) => {
-    const defaults = DEFAULT_RESOURCE_TYPES[cat.slug];
-    if (defaults) return defaults;
-    return {
-      label: cat.name,
-      icon: cat.icon || '📁',
-      color: '#6366f1',
-      gradient: 'from-indigo-500 to-indigo-700',
-    };
+  // 获取分类的图标 - 完全动态，不依赖硬编码
+  const getCategoryIcon = (cat: ResourceCategory) => {
+    return cat.icon || '📁';
   };
 
   return (
@@ -92,14 +85,14 @@ export default function Header({ onOpenAuth }: HeaderProps) {
           {/* 资源类型导航 - 从数据库动态读取 */}
           <nav className="hidden lg:flex items-center gap-1">
             {categories.map((cat) => {
-              const style = getCategoryStyle(cat);
+              const icon = getCategoryIcon(cat);
               return (
                 <Link
                   key={cat.id}
                   href={`/resources/${cat.slug}`}
                   className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/5 transition-colors flex items-center gap-1.5"
                 >
-                  <span>{style.icon}</span>
+                  <span>{icon}</span>
                   <span>{cat.name}</span>
                 </Link>
               );
@@ -200,7 +193,7 @@ export default function Header({ onOpenAuth }: HeaderProps) {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-border py-2 space-y-1">
             {categories.map((cat) => {
-              const style = getCategoryStyle(cat);
+              const icon = getCategoryIcon(cat);
               return (
                 <Link
                   key={cat.id}
@@ -208,7 +201,7 @@ export default function Header({ onOpenAuth }: HeaderProps) {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-white/5"
                 >
-                  <span>{style.icon}</span>
+                  <span>{icon}</span>
                   <span>{cat.name}</span>
                 </Link>
               );

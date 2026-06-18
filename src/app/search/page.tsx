@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import ResourceCard from '@/components/ResourceCard';
-import { DEFAULT_RESOURCE_TYPES, type Resource, type ResourceType } from '@/lib/types';
+import { type Resource, type ResourceCategory } from '@/lib/types';
 import { Suspense } from 'react';
 
 const PAGE_SIZE = 12;
@@ -18,7 +18,16 @@ function SearchContent() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [topCategories, setTopCategories] = useState<ResourceCategory[]>([]);
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  useEffect(() => {
+    // 动态加载顶级分类
+    fetch('/api/resource-categories?top_level=true')
+      .then(r => r.json())
+      .then(d => { if (d.data) setTopCategories(d.data); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!q.trim()) return;
@@ -53,14 +62,13 @@ function SearchContent() {
           >
             全部
           </button>
-          {(Object.entries(DEFAULT_RESOURCE_TYPES) as [ResourceType, typeof DEFAULT_RESOURCE_TYPES[ResourceType]][]).map(([key, config]) => (
+          {topCategories.map((cat) => (
             <button
-              key={key}
-              onClick={() => handleTypeChange(key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${typeFilter === key ? 'text-white' : 'bg-white/5 text-muted-foreground border border-border'}`}
-              style={typeFilter === key ? { backgroundColor: config.color } : {}}
+              key={cat.id}
+              onClick={() => handleTypeChange(cat.resource_type || cat.slug)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${typeFilter === (cat.resource_type || cat.slug) ? 'bg-purple-600 text-white' : 'bg-white/5 text-muted-foreground border border-border'}`}
             >
-              {config.icon} {config.label}
+              {cat.icon || '📁'} {cat.name}
             </button>
           ))}
         </div>

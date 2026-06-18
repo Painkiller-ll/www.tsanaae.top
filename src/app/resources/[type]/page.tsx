@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import ResourceCard from '@/components/ResourceCard';
-import { DEFAULT_RESOURCE_TYPES, type Resource, type ResourceCategory } from '@/lib/types';
+import { type Resource, type ResourceCategory } from '@/lib/types';
 
 const PAGE_SIZE = 12;
 
@@ -70,12 +70,8 @@ export default function ResourcesByTypePage() {
     setPage(1);
   };
 
-  // 获取分类样式
+  // 获取分类样式 - 完全动态
   const getStyle = () => {
-    if (currentCategory) {
-      const defaults = DEFAULT_RESOURCE_TYPES[currentCategory.slug];
-      if (defaults) return defaults;
-    }
     return { label: currentCategory?.name || type, icon: currentCategory?.icon || '📁', color: '#6366f1', gradient: 'from-indigo-500 to-indigo-700' };
   };
 

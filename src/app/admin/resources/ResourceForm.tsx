@@ -2,10 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { DEFAULT_RESOURCE_TYPES, DEFAULT_COVERS } from '@/lib/types';
+import { DEFAULT_COVERS } from '@/lib/types';
 import { adminFetch, adminFetchJSON, safeJson } from '@/lib/admin-fetch';
 import type { ResourceType } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
+
+interface TopCategory {
+  id: number;
+  name: string;
+  slug: string;
+  resource_type: string;
+  icon: string | null;
+  sort_order: number;
+}
 
 interface DownloadLink {
   title: string;
@@ -43,6 +52,17 @@ export default function ResourceForm({ mode, resourceId }: Props) {
   ]);
   const [extraData, setExtraData] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [topCategories, setTopCategories] = useState<TopCategory[]>([]);
+
+  // 加载顶级分类（资源类型）
+  useEffect(() => {
+    fetch('/api/resource-categories?top_level=true')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data) setTopCategories(d.data.sort((a: TopCategory, b: TopCategory) => a.sort_order - b.sort_order));
+      })
+      .catch(() => {});
+  }, []);
 
   // Load categories when type changes
   useEffect(() => {
@@ -250,23 +270,22 @@ export default function ResourceForm({ mode, resourceId }: Props) {
           <div className="bg-card rounded-xl p-6 border border-border space-y-5">
             <h3 className="text-lg font-semibold text-foreground">基本信息</h3>
 
-            {/* 资源类型 */}
+            {/* 资源类型 - 动态从数据库读取 */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">资源类型 *</label>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(DEFAULT_RESOURCE_TYPES).map(([key, cfg]) => (
+                {topCategories.map((cat) => (
                   <button
-                    key={key}
+                    key={cat.slug}
                     type="button"
-                    onClick={() => setResourceType(key)}
+                    onClick={() => setResourceType(cat.resource_type || cat.slug)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      resourceType === key
-                        ? 'text-white shadow-md'
+                      resourceType === (cat.resource_type || cat.slug)
+                        ? 'bg-purple-600 text-white shadow-md'
                         : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
-                    style={resourceType === key ? { backgroundColor: cfg.color } : {}}
                   >
-                    {cfg.icon} {cfg.label}
+                    {cat.icon || '📁'} {cat.name}
                   </button>
                 ))}
               </div>
@@ -378,34 +397,39 @@ export default function ResourceForm({ mode, resourceId }: Props) {
               />
             </div>
 
-            {/* 默认封面选择 */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">或选择默认封面</label>
-              <div className="flex flex-wrap gap-3">
-                {Object.entries(DEFAULT_COVERS).map(([key, url]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setCoverUrl(url)}
-                    className={`relative w-24 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      coverUrl === url ? 'border-purple-500 shadow-lg shadow-purple-500/20' : 'border-border hover:border-muted-foreground/50'
-                    }`}
-                  >
-                    <img src={url} alt={DEFAULT_RESOURCE_TYPES[key]?.label || key} className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[10px] py-0.5 text-center">
-                      {DEFAULT_RESOURCE_TYPES[key]?.icon} {DEFAULT_RESOURCE_TYPES[key]?.label}
-                    </span>
-                  </button>
-                ))}
+            {/* 默认封面选择 - 动态从分类获取 */}
+            {Object.keys(DEFAULT_COVERS).length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">或选择默认封面</label>
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(DEFAULT_COVERS).map(([key, url]) => {
+                    const matchedCat = topCategories.find(c => c.slug === key || c.resource_type === key);
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setCoverUrl(url)}
+                        className={`relative w-24 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          coverUrl === url ? 'border-purple-500 shadow-lg shadow-purple-500/20' : 'border-border hover:border-muted-foreground/50'
+                        }`}
+                      >
+                        <img src={url} alt={matchedCat?.name || key} className="w-full h-full object-cover" />
+                        <span className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[10px] py-0.5 text-center">
+                          {matchedCat?.icon || '📁'} {matchedCat?.name || key}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* 类型特有字段 */}
           {(typeFields[resourceType] || []).length > 0 && (
             <div className="bg-card rounded-xl p-6 border border-border space-y-5">
               <h3 className="text-lg font-semibold text-foreground">
-                {DEFAULT_RESOURCE_TYPES[resourceType]?.icon} {DEFAULT_RESOURCE_TYPES[resourceType]?.label}信息
+                {topCategories.find(c => c.resource_type === resourceType || c.slug === resourceType)?.icon || '📁'} {topCategories.find(c => c.resource_type === resourceType || c.slug === resourceType)?.name || resourceType}信息
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(typeFields[resourceType] || []).map(field => (
