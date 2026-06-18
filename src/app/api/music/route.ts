@@ -13,12 +13,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    // 本地文件直接使用 file_key 作为 URL 路径
-    const tracks = (data || []).map((track: Record<string, unknown>) => {
-      return { ...track, file_url: track.file_key as string };
-    });
-
-    return NextResponse.json({ tracks });
+    return NextResponse.json({ tracks: data || [] });
   } catch (err) {
     const message = err instanceof Error ? err.message : '获取播放列表失败';
     return NextResponse.json({ error: message }, { status: 500 });

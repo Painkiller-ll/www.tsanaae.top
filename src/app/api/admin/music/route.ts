@@ -52,25 +52,29 @@ export async function POST(request: NextRequest) {
 
     const sortOrder = maxSort && maxSort.length > 0 ? (maxSort[0] as { sort_order: number }).sort_order + 1 : 0;
 
-    // 写入数据库，file_key 字段存储在线URL
+    // 写入数据库，file_url 字段存储在线URL
     const { data, error } = await supabase
       .from('music_tracks')
       .insert({
         title,
         artist: artist || null,
         cover_image: cover_image || null,
-        file_key: music_url,
+        file_url: music_url,
         sort_order: sortOrder,
         is_active: true,
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[music POST] Supabase insert error:', JSON.stringify(error));
+      throw new Error(error.message || '数据库写入失败');
+    }
 
     return NextResponse.json({ track: data });
   } catch (err) {
     const message = err instanceof Error ? err.message : '添加失败';
+    console.error('[music POST] Error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -86,11 +90,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
-    const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
     if (artist !== undefined) updateData.artist = artist;
     if (cover_image !== undefined) updateData.cover_image = cover_image;
-    if (music_url !== undefined) updateData.file_key = music_url;
+    if (music_url !== undefined) updateData.file_url = music_url;
     if (sort_order !== undefined) updateData.sort_order = sort_order;
     if (is_active !== undefined) updateData.is_active = is_active;
 

@@ -9,7 +9,7 @@ interface MusicTrack {
   title: string;
   artist: string | null;
   cover_image: string | null;
-  file_key: string;
+  file_url: string;
   duration: number;
   sort_order: number;
   is_active: boolean;
@@ -203,7 +203,7 @@ export default function AdminMusicPage() {
     setEditingId(track.id);
     setEditTitle(track.title);
     setEditArtist(track.artist || '');
-    setEditMusicUrl(track.file_key);
+    setEditMusicUrl(track.file_url);
     setEditCover(track.cover_image || '');
   };
 
@@ -240,7 +240,7 @@ export default function AdminMusicPage() {
           ...t,
           title: editTitle,
           artist: editArtist || null,
-          file_key: editMusicUrl,
+          file_url: editMusicUrl,
           cover_image: editCover || null,
         } : t));
         setEditingId(null);
@@ -400,7 +400,7 @@ export default function AdminMusicPage() {
         ) : (
           <div className="divide-y divide-border">
             {tracks.map((track) => {
-              const trackInfo = analyzeMusicUrl(track.file_key);
+              const trackInfo = analyzeMusicUrl(track.file_url);
               return (
                 <div key={track.id} className="px-6 py-4 hover:bg-secondary/20 transition-colors">
                   {editingId === track.id ? (
@@ -481,7 +481,7 @@ export default function AdminMusicPage() {
                           {/* 播放类型标签 */}
                           {trackInfo.playType === 'embed' ? (
                             <span className="px-1.5 py-0.5 text-xs bg-blue-600/20 text-blue-400 rounded">嵌入播放</span>
-                          ) : !isDirectAudioUrl(track.file_key) ? (
+                          ) : !isDirectAudioUrl(track.file_url) ? (
                             <span className="px-1.5 py-0.5 text-xs bg-amber-600/20 text-amber-400 rounded">非直链</span>
                           ) : null}
                           {trackInfo.platform && (
@@ -489,8 +489,8 @@ export default function AdminMusicPage() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground truncate">{track.artist || '未知艺术家'}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate" title={track.file_key}>
-                          链接: {track.file_key}
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate" title={track.file_url}>
+                          链接: {track.file_url}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           播放 {track.play_count} 次 · 排序 {track.sort_order}
@@ -500,7 +500,7 @@ export default function AdminMusicPage() {
                       {/* 操作 */}
                       <div className="flex items-center gap-2 shrink-0">
                         <button
-                          onClick={() => testPlay(track.file_key)}
+                          onClick={() => testPlay(track.file_url)}
                           className="px-3 py-1 text-sm rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors"
                         >
                           试听
