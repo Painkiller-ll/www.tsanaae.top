@@ -131,9 +131,9 @@ export default function SubmitArticlePage() {
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white focus:outline-none focus:border-purple-500"
+                className="w-full px-4 py-2.5 rounded-lg border border-purple-500/50 bg-[#1a1a24] text-purple-300 focus:outline-none focus:border-purple-400 [&>option]:bg-[#1a1a24] [&>option]:text-gray-200"
               >
-                <option value="">选择分类（可选）</option>
+                <option value="">请选择分类（可选）</option>
                 <option value="学习资料">学习资料</option>
                 <option value="影视剧">影视剧</option>
                 <option value="音乐">音乐</option>
