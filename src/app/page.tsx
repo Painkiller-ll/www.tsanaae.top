@@ -29,6 +29,90 @@ const DEFAULT_STYLE: CategoryStyle = {
   border: 'border-gray-200 dark:border-gray-500/20', text: 'text-gray-600 dark:text-gray-400', icon: '📁',
 };
 
+/** 分类网格 - 超过一行时支持折叠/展开 */
+function CategoryGrid({ categories, resourcesByType }: {
+  categories: ResourceCategory[];
+  resourcesByType: Record<string, Resource[]>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  // 推荐卡片 + 分类卡片
+  type CategoryItem = { id: string; isPromo: true } | { id: string; isPromo: false; cat: ResourceCategory };
+  const allItems: CategoryItem[] = [
+    { id: '__promo__', isPromo: true },
+    ...categories.map(cat => ({ id: String(cat.id), isPromo: false as const, cat })),
+  ];
+
+  // 每行最多显示数：手机2列、平板3列、桌面6列
+  // 折叠时只显示第一行的数量（取最大值6，确保各端第一行都完整）
+  const ROW_SIZE = 6;
+  const needsCollapse = allItems.length > ROW_SIZE;
+  const visibleItems = expanded ? allItems : allItems.slice(0, ROW_SIZE);
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
+        {visibleItems.map(item => {
+          if (item.isPromo) {
+            return (
+              <Link
+                key={item.id}
+                href="/recommend"
+                className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 sm:p-5 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/20 active:scale-[0.98]"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-0 group-hover:opacity-15 transition-opacity" />
+                <div className="relative z-10 flex flex-col items-center text-center gap-1 sm:gap-2">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span className="font-bold text-sm sm:text-base text-amber-400">推荐</span>
+                  <span className="text-[10px] sm:text-xs text-amber-400/60">精选推荐</span>
+                </div>
+              </Link>
+            );
+          }
+          const cat = (item as { isPromo: false; cat: ResourceCategory }).cat;
+          const styleKey = cat.resource_type || cat.slug;
+          const style = CATEGORY_STYLES[styleKey] || DEFAULT_STYLE;
+          const icon = cat.icon || style.icon;
+          return (
+            <Link
+              key={item.id}
+              href={`/resources/${cat.slug}`}
+              className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border ${style.border} ${style.bgLight} p-3 sm:p-5 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]`}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
+              <div className="relative z-10 flex flex-col items-center text-center gap-1 sm:gap-2">
+                <span className="text-2xl sm:text-4xl">{icon}</span>
+                <span className={`font-bold text-sm sm:text-base ${style.text}`}>{cat.name}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                  {(resourcesByType[cat.slug] || []).length > 0
+                    ? `${resourcesByType[cat.slug]?.length || 0}+ 资源`
+                    : '敬请期待'}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+      {needsCollapse && (
+        <div className="flex justify-center mt-3">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm text-muted-foreground hover:text-foreground border border-border/50 hover:border-border bg-card/50 hover:bg-card transition-all"
+          >
+            {expanded ? (
+              <>收起 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 15l-6-6-6 6"/></svg></>
+            ) : (
+              <>查看更多分类 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg></>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [resourcesByType, setResourcesByType] = useState<Record<string, Resource[]>>({});
@@ -75,47 +159,9 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* 6大分类入口 - 移动端2列，平板3列，桌面6列 */}
+        {/* 分类入口 - 可折叠 */}
         <section className="mb-6 sm:mb-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
-            {/* 推荐小程序入口 - 醒目金色卡片 */}
-            <Link
-              href="/recommend"
-              className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 sm:p-5 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/20 active:scale-[0.98]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-0 group-hover:opacity-15 transition-opacity" />
-              <div className="relative z-10 flex flex-col items-center text-center gap-1 sm:gap-2">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                <span className="font-bold text-sm sm:text-base text-amber-400">推荐</span>
-                <span className="text-[10px] sm:text-xs text-amber-400/60">精选推荐</span>
-              </div>
-            </Link>
-            {categories.map(cat => {
-              const styleKey = cat.resource_type || cat.slug;
-              const style = CATEGORY_STYLES[styleKey] || DEFAULT_STYLE;
-              const icon = cat.icon || style.icon;
-              return (
-                <Link
-                  key={cat.id}
-                  href={`/resources/${cat.slug}`}
-                  className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border ${style.border} ${style.bgLight} p-3 sm:p-5 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]`}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                  <div className="relative z-10 flex flex-col items-center text-center gap-1 sm:gap-2">
-                    <span className="text-2xl sm:text-4xl">{icon}</span>
-                    <span className={`font-bold text-sm sm:text-base ${style.text}`}>{cat.name}</span>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">
-                      {(resourcesByType[cat.slug] || []).length > 0
-                        ? `${resourcesByType[cat.slug]?.length || 0}+ 资源`
-                        : '敬请期待'}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          <CategoryGrid categories={categories} resourcesByType={resourcesByType} />
         </section>
 
         {/* 关于/联系方式 */}
