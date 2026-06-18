@@ -31,6 +31,11 @@ export async function GET() {
     site_logo_url: data.site_logo_url || '',
     site_bg_image: data.site_bg_image || '',
     about_text: data.about_text || '',
+    promo_title: data.promo_title || '推荐小程序',
+    promo_description: data.promo_description || '扫码体验精选小程序，支持站长持续更新优质资源',
+    promo_qr_code_url: data.promo_qr_code_url || '',
+    promo_mini_program_name: data.promo_mini_program_name || '',
+    promo_tags: typeof data.promo_tags === 'string' ? data.promo_tags : (Array.isArray(data.promo_tags) ? data.promo_tags.join(',') : ''),
     footer_links: data.footer_links || [],
   };
 
