@@ -19,7 +19,22 @@ export async function POST(request: Request) {
       { column: 'site_logo_url', default: '' },
       { column: 'site_bg_image', default: '' },
       { column: 'about_text', default: '' },
+      { column: 'promo_title', default: '推荐小程序' },
+      { column: 'promo_description', default: '扫码体验精选小程序，支持站长持续更新优质资源' },
+      { column: 'promo_qr_code_url', default: '' },
+      { column: 'promo_mini_program_name', default: '' },
     ];
+
+    // promo_tags is jsonb, handle separately
+    const { error: tagError } = await supabase
+      .from('site_settings')
+      .update({ promo_tags: ['免费资源', '收益支持'] })
+      .eq('id', 1);
+    if (tagError) {
+      results.site_settings.push(`promo_tags: 需手动添加 - ${tagError.message}`);
+    } else {
+      results.site_settings.push('promo_tags: ok');
+    }
 
     for (const m of siteMigrations) {
       const { error } = await supabase

@@ -22,6 +22,11 @@ interface Settings {
   contact_telegram: string;
   contact_github: string;
   about_text: string;
+  promo_title: string;
+  promo_description: string;
+  promo_qr_code_url: string;
+  promo_mini_program_name: string;
+  promo_tags: string;
 }
 
 export default function AdminSettingsPage() {
@@ -44,6 +49,11 @@ export default function AdminSettingsPage() {
     contact_telegram: '',
     contact_github: '',
     about_text: '',
+    promo_title: '推荐小程序',
+    promo_description: '扫码体验精选小程序，支持站长持续更新优质资源',
+    promo_qr_code_url: '',
+    promo_mini_program_name: '',
+    promo_tags: '免费资源,收益支持',
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -235,6 +245,44 @@ export default function AdminSettingsPage() {
             <label className={labelClass}>关于本站</label>
             <textarea value={settings.about_text} onChange={e => setSettings({ ...settings, about_text: e.target.value })} placeholder="介绍你的网站..." className={inputClass} rows={4} />
           </div>
+        </div>
+      </div>
+
+      {/* 推广小程序设置 */}
+      <div className="bg-[#1a1a24] rounded-xl border border-amber-500/20 p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-amber-400 mb-2 flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          推广小程序
+        </h3>
+        <p className="text-xs text-[#71717a]">设置导航栏"推荐"页面的内容，用于推广小程序获取管道收益</p>
+        <div>
+          <label className={labelClass}>推广标题</label>
+          <input type="text" value={settings.promo_title} onChange={e => setSettings({ ...settings, promo_title: e.target.value })} placeholder="推荐小程序" className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>小程序名称</label>
+          <input type="text" value={settings.promo_mini_program_name} onChange={e => setSettings({ ...settings, promo_mini_program_name: e.target.value })} placeholder="小程序的名称" className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>推广描述</label>
+          <textarea value={settings.promo_description} onChange={e => setSettings({ ...settings, promo_description: e.target.value })} placeholder="扫码体验精选小程序，支持站长持续更新优质资源" className={inputClass} rows={3} />
+        </div>
+        <div>
+          <label className={labelClass}>小程序码图片 URL</label>
+          <input type="text" value={settings.promo_qr_code_url} onChange={e => setSettings({ ...settings, promo_qr_code_url: e.target.value })} placeholder="上传小程序码图片链接" className={inputClass} />
+          {settings.promo_qr_code_url && (
+            <div className="mt-2 w-32 h-32 rounded-lg overflow-hidden border border-white/[0.08] bg-white p-1">
+              <img src={settings.promo_qr_code_url} alt="小程序码预览" className="w-full h-full object-contain" />
+            </div>
+          )}
+          <p className="text-xs text-[#71717a] mt-1">在微信小程序后台获取小程序码，上传图片后填入URL</p>
+        </div>
+        <div>
+          <label className={labelClass}>标签（用逗号分隔）</label>
+          <input type="text" value={settings.promo_tags} onChange={e => setSettings({ ...settings, promo_tags: e.target.value })} placeholder="免费资源,收益支持,限时优惠" className={inputClass} />
+          <p className="text-xs text-[#71717a] mt-1">可选标签: 免费资源、收益支持、限时优惠、精选推荐、新用户福利</p>
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ const ALLOWED_FIELDS = [
   'site_bg_color', 'site_card_color', 'site_accent_color',
   'site_logo_url', 'site_bg_image', 'about_text',
   'footer_links',
+  'promo_title', 'promo_description', 'promo_qr_code_url', 'promo_mini_program_name', 'promo_tags',
 ] as const;
 
 type AllowedField = typeof ALLOWED_FIELDS[number];
@@ -37,6 +38,12 @@ export async function PUT(request: Request) {
       if (dbKey === 'footer_links') {
         // footer_links is jsonb, store as array
         update[dbKey] = Array.isArray(bodyValue) ? bodyValue : [];
+      } else if (dbKey === 'promo_tags') {
+        // promo_tags: comma-separated string → jsonb array
+        const tags = typeof bodyValue === 'string'
+          ? bodyValue.split(',').map((t: string) => t.trim()).filter(Boolean)
+          : Array.isArray(bodyValue) ? bodyValue : [];
+        update[dbKey] = tags;
       } else {
         update[dbKey] = String(bodyValue);
       }
