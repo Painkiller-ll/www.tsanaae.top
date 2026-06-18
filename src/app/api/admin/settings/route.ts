@@ -11,7 +11,7 @@ const ALLOWED_FIELDS = [
   'site_bg_color', 'site_card_color', 'site_accent_color',
   'site_logo_url', 'site_bg_image', 'about_text',
   'footer_links',
-  'promo_title', 'promo_description', 'promo_qr_code_url', 'promo_mini_program_name', 'promo_tags',
+  'promo_title', 'promo_description', 'promo_qr_code_url', 'promo_mini_program_name', 'promo_tags', 'promo_icon_url',
 ] as const;
 
 type AllowedField = typeof ALLOWED_FIELDS[number];

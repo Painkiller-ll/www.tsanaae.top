@@ -36,6 +36,7 @@ export async function GET() {
     promo_qr_code_url: data.promo_qr_code_url || '',
     promo_mini_program_name: data.promo_mini_program_name || '',
     promo_tags: typeof data.promo_tags === 'string' ? data.promo_tags : (Array.isArray(data.promo_tags) ? data.promo_tags.join(',') : ''),
+    promo_icon_url: data.promo_icon_url || '',
     footer_links: data.footer_links || [],
   };
 

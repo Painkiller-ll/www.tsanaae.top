@@ -27,6 +27,7 @@ interface Settings {
   promo_qr_code_url: string;
   promo_mini_program_name: string;
   promo_tags: string;
+  promo_icon_url: string;
 }
 
 export default function AdminSettingsPage() {
@@ -54,6 +55,7 @@ export default function AdminSettingsPage() {
     promo_qr_code_url: '',
     promo_mini_program_name: '',
     promo_tags: '免费资源,收益支持',
+    promo_icon_url: '',
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -278,6 +280,16 @@ export default function AdminSettingsPage() {
             </div>
           )}
           <p className="text-xs text-[#71717a] mt-1">在微信小程序后台获取小程序码，上传图片后填入URL</p>
+        </div>
+        <div>
+          <label className={labelClass}>推广页图标 URL</label>
+          <input type="text" value={settings.promo_icon_url} onChange={e => setSettings({ ...settings, promo_icon_url: e.target.value })} placeholder="自定义推广页图标（可选，留空使用默认图标）" className={inputClass} />
+          {settings.promo_icon_url && (
+            <div className="mt-2 w-16 h-16 rounded-2xl overflow-hidden border border-white/[0.08]">
+              <img src={settings.promo_icon_url} alt="图标预览" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <p className="text-xs text-[#71717a] mt-1">推广页顶部显示的图标，留空使用默认紫色图标</p>
         </div>
         <div>
           <label className={labelClass}>标签（用逗号分隔）</label>

@@ -78,6 +78,20 @@ export default function HomePage() {
         {/* 6大分类入口 - 移动端2列，平板3列，桌面6列 */}
         <section className="mb-6 sm:mb-8">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
+            {/* 推荐小程序入口 - 醒目金色卡片 */}
+            <Link
+              href="/recommend"
+              className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 sm:p-5 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/20 active:scale-[0.98]"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-0 group-hover:opacity-15 transition-opacity" />
+              <div className="relative z-10 flex flex-col items-center text-center gap-1 sm:gap-2">
+                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <span className="font-bold text-sm sm:text-base text-amber-400">推荐</span>
+                <span className="text-[10px] sm:text-xs text-amber-400/60">精选推荐</span>
+              </div>
+            </Link>
             {categories.map(cat => {
               const styleKey = cat.resource_type || cat.slug;
               const style = CATEGORY_STYLES[styleKey] || DEFAULT_STYLE;

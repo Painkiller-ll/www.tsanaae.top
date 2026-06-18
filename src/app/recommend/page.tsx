@@ -9,6 +9,7 @@ interface PromoSettings {
   promo_qr_code_url: string;
   promo_mini_program_name: string;
   promo_tags: string[];
+  promo_icon_url: string;
 }
 
 const DEFAULT_SETTINGS: PromoSettings = {
@@ -17,6 +18,7 @@ const DEFAULT_SETTINGS: PromoSettings = {
   promo_qr_code_url: '',
   promo_mini_program_name: '',
   promo_tags: ['免费资源', '收益支持'],
+  promo_icon_url: '',
 };
 
 export default function RecommendPage() {
@@ -32,6 +34,7 @@ export default function RecommendPage() {
           promo_qr_code_url: d.promo_qr_code_url || '',
           promo_mini_program_name: d.promo_mini_program_name || '',
           promo_tags: d.promo_tags ? (typeof d.promo_tags === 'string' ? d.promo_tags.split(',').filter(Boolean) : d.promo_tags) : ['免费资源', '收益支持'],
+          promo_icon_url: d.promo_icon_url || '',
         });
       })
       .catch(() => {
@@ -84,12 +87,16 @@ export default function RecommendPage() {
 
           <div className="p-8 sm:p-10 flex flex-col items-center text-center">
             {/* 图标 */}
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mb-5 shadow-lg shadow-purple-500/30">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M7 7h.01M12 7h.01M17 7h.01M7 12h.01M12 12h.01M17 12h.01M7 17h.01M12 17h.01" />
-              </svg>
-            </div>
+            {settings.promo_icon_url ? (
+              <img src={settings.promo_icon_url} alt={settings.promo_title} className="w-16 h-16 rounded-2xl mb-5 shadow-lg shadow-purple-500/30 object-cover" />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mb-5 shadow-lg shadow-purple-500/30">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M7 7h.01M12 7h.01M17 7h.01M7 12h.01M12 12h.01M17 12h.01M7 17h.01M12 17h.01" />
+                </svg>
+              </div>
+            )}
 
             {/* 标题 */}
             <h1 className="text-2xl font-bold text-white mb-2">

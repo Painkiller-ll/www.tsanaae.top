@@ -141,6 +141,12 @@ export default function Header({ onOpenAuth }: HeaderProps) {
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
               )}
             </button>
+            {/* 手机端推荐入口 */}
+            <Link href="/recommend" className="lg:hidden p-1.5 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors" title="推荐">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </Link>
             {/* 手机端搜索 */}
             <button onClick={() => { const q = prompt('搜索资源:'); if (q) window.location.href = `/search?q=${encodeURIComponent(q)}`; }} className="sm:hidden p-1.5 rounded-lg hover:bg-white/5 text-muted-foreground">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>

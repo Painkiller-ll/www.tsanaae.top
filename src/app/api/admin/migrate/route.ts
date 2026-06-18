@@ -23,6 +23,7 @@ export async function POST(request: Request) {
       { column: 'promo_description', default: '扫码体验精选小程序，支持站长持续更新优质资源' },
       { column: 'promo_qr_code_url', default: '' },
       { column: 'promo_mini_program_name', default: '' },
+      { column: 'promo_icon_url', default: '' },
     ];
 
     // promo_tags is jsonb, handle separately
