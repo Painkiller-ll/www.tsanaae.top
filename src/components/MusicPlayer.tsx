@@ -12,6 +12,7 @@ export default function MusicPlayer() {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [audioError, setAudioError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // 加载播放列表
@@ -43,17 +44,30 @@ export default function MusicPlayer() {
     };
     const onLoadedData = () => {
       setIsLoading(false);
+      setAudioError(false);
       setDuration(audio.duration || 0);
+    };
+    const onError = () => {
+      setIsLoading(false);
+      setAudioError(true);
+      // 自动跳到下一首（2秒后）
+      if (tracks.length > 1) {
+        setTimeout(() => {
+          setCurrentIndex(prev => (prev + 1) % tracks.length);
+        }, 2000);
+      }
     };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('ended', onEnded);
     audio.addEventListener('loadeddata', onLoadedData);
+    audio.addEventListener('error', onError);
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate);
       audio.removeEventListener('ended', onEnded);
       audio.removeEventListener('loadeddata', onLoadedData);
+      audio.removeEventListener('error', onError);
     };
   }, [tracks.length]);
 
@@ -65,6 +79,7 @@ export default function MusicPlayer() {
     const track = tracks[currentIndex];
     if (track?.file_url) {
       setIsLoading(true);
+      setAudioError(false);
       audio.src = track.file_url;
       if (isPlaying) {
         audio.play().catch(() => {});
@@ -167,6 +182,9 @@ export default function MusicPlayer() {
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-foreground truncate">{currentTrack?.title || '未知曲目'}</p>
               <p className="text-[10px] text-muted-foreground truncate">{currentTrack?.artist || '未知艺术家'}</p>
+              {audioError && (
+                <p className="text-[10px] text-red-400 truncate">音频加载失败，正在切换下一首...</p>
+              )}
             </div>
           </div>
 
