@@ -1,28 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { type ResourceCategory } from '@/lib/types';
 import { useTheme } from '@/components/ThemeProvider';
-
-interface HeaderProps {
-  onOpenAuth?: () => void;
-}
 
 interface SiteInfo {
   site_name: string;
   site_logo_url?: string;
 }
 
-export default function Header({ onOpenAuth }: HeaderProps) {
+export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ id: string; username: string; points: number; level: number } | null>(null);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/site-settings').then(r => r.json()).then(d => { setSiteInfo(d.data || d); }).catch(() => {});
@@ -30,30 +23,11 @@ export default function Header({ onOpenAuth }: HeaderProps) {
     fetch('/api/resource-categories?top_level=true').then(r => r.json()).then(d => {
       if (d.data && d.data.length > 0) setCategories(d.data);
     }).catch(() => {});
-    const token = localStorage.getItem('user_token');
-    if (token) {
-      fetch('/api/user/profile', { headers: { 'x-session': token } }).then(r => r.json()).then(d => { if (d.data) setUser(d.data); }).catch(() => {});
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user_token');
-    setUser(null);
-    setUserMenuOpen(false);
-    window.location.reload();
   };
 
   const siteName = siteInfo?.site_name || 'Tsanaae';
@@ -108,7 +82,7 @@ export default function Header({ onOpenAuth }: HeaderProps) {
             </Link>
             <Link
               href="/submit"
-              className="md:hidden px-3 py-1.5 text-sm text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 transition-colors flex items-center gap-1.5 font-medium"
+              className="px-3 py-1.5 text-sm text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 transition-colors flex items-center gap-1.5 font-medium"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
@@ -153,34 +127,6 @@ export default function Header({ onOpenAuth }: HeaderProps) {
             <button onClick={() => { const q = prompt('搜索资源:'); if (q) window.location.href = `/search?q=${encodeURIComponent(q)}`; }} className="sm:hidden p-1.5 rounded-lg hover:bg-white/5 text-muted-foreground">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </button>
-
-            {/* 用户 */}
-            {user ? (
-              <div className="relative" ref={userMenuRef}>
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                  <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                    {(user.username || 'U')[0].toUpperCase()}
-                  </div>
-                  <span className="hidden md:inline text-sm text-foreground">{user.username}</span>
-                </button>
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-card border border-border shadow-xl py-1 z-50">
-                    <div className="px-3 py-2 border-b border-border">
-                      <p className="text-sm font-medium text-foreground">{user.username}</p>
-                      <p className="text-xs text-muted-foreground">Lv.{user.level} · {user.points}积分</p>
-                    </div>
-                    <Link href="/profile" className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-white/5">个人中心</Link>
-                    <Link href="/favorites" className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-white/5">我的收藏</Link>
-                    <Link href="/shop" className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-white/5">积分商城</Link>
-                    <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-white/5">退出登录</button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link href="/profile" className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                登录
-              </Link>
-            )}
 
             {/* 手机端菜单 */}
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-muted-foreground">
@@ -227,7 +173,7 @@ export default function Header({ onOpenAuth }: HeaderProps) {
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span>投稿资源</span>
+              <span>投稿</span>
             </Link>
           </div>
         )}

@@ -136,6 +136,9 @@ export default function ResourceDetailPage() {
     platform: '平台', version: '版本', size: '大小', language: '语言',
     duration: '时长', episodes: '集数', season: '季数', genre: '类型',
     publisher: '发行商', release_date: '发行日期', rating: '评分',
+    cast: '演员', year: '年份', region: '地区', summary: '简介',
+    tags: '标签', format: '格式', quality: '画质', subtitle: '字幕',
+    source: '来源', update_time: '更新时间', status: '状态',
   };
 
   return (
@@ -247,7 +250,7 @@ export default function ResourceDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {Object.entries(extra).map(([key, value]) => (
                     <div key={key}>
-                      <span className="text-xs text-muted-foreground">{keyLabelMap[key] || key}</span>
+                      <span className="text-xs text-muted-foreground">{keyLabelMap[key] || key.replace(/_/g, ' ')}</span>
                       <p className="text-sm text-foreground">{String(value)}</p>
                     </div>
                   ))}
