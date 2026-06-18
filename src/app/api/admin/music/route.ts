@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import verifyAdminRequest from '@/lib/admin-verify';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+
+// 增加请求体大小限制以支持大文件上传
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb',
+    },
+  },
+};
 
 const MUSIC_DIR = path.join(process.cwd(), 'public', 'music');
 
@@ -33,6 +43,9 @@ export async function GET() {
 // POST: 上传新曲目
 export async function POST(request: NextRequest) {
   try {
+    const authErr = await verifyAdminRequest(request);
+    if (authErr) return authErr;
+
     await ensureMusicDir();
 
     const formData = await request.formData();
@@ -73,7 +86,7 @@ export async function POST(request: NextRequest) {
     await writeFile(filePath, buffer);
 
     // 文件的访问路径
-    const fileKey = `/music/${fileName}`;
+    const fileKey = `/api/files/music/${fileName}`;
 
     // 获取最大 sort_order
     const supabase = getSupabaseClient();
@@ -173,7 +186,9 @@ export async function DELETE(request: NextRequest) {
     // 删除本地文件
     if (track?.file_key) {
       try {
-        const filePath = path.join(process.cwd(), 'public', track.file_key);
+        // file_key is /api/files/music/xxx.mp3, actual file is public/music/xxx.mp3
+        const actualFileName = track.file_key.replace('/api/files/music/', '');
+        const filePath = path.join(process.cwd(), 'public', 'music', actualFileName);
         if (existsSync(filePath)) {
           const { unlink } = await import('fs/promises');
           await unlink(filePath);
