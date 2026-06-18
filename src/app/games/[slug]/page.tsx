@@ -54,9 +54,9 @@ export default function CategoryPage() {
       ? `/api/games?category=${categoryId}&tag=${selectedTag}&limit=50`
       : `/api/games?category=${categoryId}&limit=50`;
     fetch(url)
-      .then((res) => res.json())
+      .then(async (res) => { const t = await res.text(); return t ? JSON.parse(t) : null; })
       .then((data) => {
-        if (data.games) setGames(data.games);
+        if (data?.games) setGames(data.games);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

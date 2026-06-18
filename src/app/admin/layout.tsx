@@ -12,6 +12,8 @@ const NAV_ITEMS = [
   { href: '/admin/announcements', label: '公告管理', icon: '📢' },
   { href: '/admin/faqs', label: 'FAQ管理', icon: '❓' },
   { href: '/admin/music', label: '音乐管理', icon: '🎵' },
+  { href: '/admin/articles', label: '文章审核', icon: '📝' },
+  { href: '/admin/comments', label: '评论审核', icon: '💬' },
   { href: '/admin/shop', label: '积分商城', icon: '🛒' },
   { href: '/admin/settings', label: '站点设置', icon: '⚙️' },
 ];

@@ -115,118 +115,115 @@ function CategoryGrid({ categories, resourcesByType }: {
 
 export default function HomePage() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
-  const [resourcesByType, setResourcesByType] = useState<Record<string, Resource[]>>({});
+  const [featuredResources, setFeaturedResources] = useState<Resource[]>([]);
   const [siteDesc, setSiteDesc] = useState('');
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 根据数据库分类动态加载资源
-    fetch('/api/resource-categories?top_level=true')
-      .then(r => r.json())
-      .then(d => {
+    Promise.all([
+      fetch('/api/resource-categories?top_level=true').then(r => r.json()).then(d => {
         if (d.data) {
           setCategories(d.data);
-          // 用数据库分类的slug加载资源（不再硬编码）
-          d.data.forEach((cat: ResourceCategory) => {
-            fetch(`/api/resources?type=${cat.slug}&limit=8&is_published=true`)
-              .then(r => r.json())
-              .then(rd => { if (rd.data) setResourcesByType(prev => ({ ...prev, [cat.slug]: rd.data })); })
-              .catch(() => {});
-          });
         }
-      })
-      .catch(() => {});
-
-    fetch('/api/site-settings')
-      .then(r => r.json())
-      .then(d => {
-        if (d.site_description) setSiteDesc(d.site_description);
-        setSettings(d);
-      })
-      .catch(() => {});
+      }),
+      fetch('/api/resources?is_featured=true&limit=12&is_published=true')
+        .then(r => r.json())
+        .then(d => { if (d.data) setFeaturedResources(d.data); })
+        .catch(() => {}),
+      fetch('/api/site-settings')
+        .then(r => r.json())
+        .then(d => {
+          if (d.site_description) setSiteDesc(d.site_description);
+          setSettings(d);
+        }),
+    ]).finally(() => setLoading(false));
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <AnnouncementBar />
-
-        {/* 站点描述 */}
-        {siteDesc && (
-          <section className="mb-6 sm:mb-8 text-center">
-            <p className="text-muted-foreground text-sm sm:text-base">{siteDesc}</p>
-          </section>
-        )}
-
-        {/* 分类入口 - 可折叠 */}
-        <section className="mb-6 sm:mb-8">
-          <CategoryGrid categories={categories} resourcesByType={resourcesByType} />
-        </section>
-
-        {/* 关于/联系方式 */}
-        {(settings.about_text || settings.contact_qq || settings.contact_wechat || settings.contact_email || settings.contact_telegram || settings.contact_github) && (
-          <section className="mb-6 sm:mb-10 mt-6 sm:mt-10 rounded-xl sm:rounded-2xl border border-border bg-card p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">关于本站</h2>
-            {settings.about_text && <p className="text-sm text-muted-foreground mb-4">{settings.about_text}</p>}
-            <div className="flex flex-wrap gap-3 sm:gap-4">
-              {settings.contact_qq && (
-                <a href={`https://wpa.qq.com/msghd?uin=${settings.contact_qq}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <span>💬</span> QQ: {settings.contact_qq}
-                </a>
-              )}
-              {settings.contact_wechat && (
-                <span className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
-                  <span>📱</span> 微信: {settings.contact_wechat}
-                </span>
-              )}
-              {settings.contact_email && (
-                <a href={`mailto:${settings.contact_email}`} className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <span>📧</span> {settings.contact_email}
-                </a>
-              )}
-              {settings.contact_telegram && (
-                <a href={`https://t.me/${settings.contact_telegram}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <span>✈️</span> Telegram: {settings.contact_telegram}
-                </a>
-              )}
-              {settings.contact_github && (
-                <a href={`https://github.com/${settings.contact_github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <span>🐙</span> GitHub: {settings.contact_github}
-                </a>
-              )}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">加载中...</span>
             </div>
-          </section>
-        )}
+          </div>
+        ) : (
+          <>
+            <AnnouncementBar />
 
-        {/* 各分类最新资源 */}
-        {categories.map(cat => {
-          const resources = resourcesByType[cat.slug];
-          if (!resources || resources.length === 0) return null;
-          const style = CATEGORY_STYLES[cat.slug] || DEFAULT_STYLE;
+            {/* 站点描述 */}
+            {siteDesc && (
+              <section className="mb-6 sm:mb-8 text-center">
+                <p className="text-muted-foreground text-sm sm:text-base">{siteDesc}</p>
+              </section>
+            )}
 
-          return (
-            <section key={cat.id} className="mb-6 sm:mb-10">
+            {/* 分类入口 - 可折叠 */}
+            <section className="mb-6 sm:mb-8">
+              <CategoryGrid categories={categories} resourcesByType={{}} />
+            </section>
+
+            {/* 精选资源 */}
+            <section className="mb-6 sm:mb-10">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl">{cat.icon || style.icon}</span>
-                  <h2 className="text-base sm:text-xl font-bold text-foreground">{cat.name}</h2>
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <h2 className="text-base sm:text-xl font-bold text-foreground">精选资源</h2>
                 </div>
-                <Link
-                  href={`/resources/${cat.slug}`}
-                  className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                >
-                  查看全部
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                </Link>
               </div>
-              {/* 移动端2列，平板3列，桌面4列 */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-                {resources.map(r => <ResourceCard key={r.id} resource={r} />)}
-              </div>
+              {featuredResources.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                  {featuredResources.map(r => <ResourceCard key={r.id} resource={r} />)}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground text-sm">
+                  暂无精选资源，敬请期待
+                </div>
+              )}
             </section>
-          );
-        })}
+
+            {/* 关于/联系方式 */}
+            {(settings.about_text || settings.contact_qq || settings.contact_wechat || settings.contact_email || settings.contact_telegram || settings.contact_github) && (
+              <section className="mb-6 sm:mb-10 mt-6 sm:mt-10 rounded-xl sm:rounded-2xl border border-border bg-card p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">关于本站</h2>
+                {settings.about_text && <p className="text-sm text-muted-foreground mb-4">{settings.about_text}</p>}
+                <div className="flex flex-wrap gap-3 sm:gap-4">
+                  {settings.contact_qq && (
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground select-none" style={{pointerEvents:'auto'}}>
+                      <span>💬</span> QQ: <span className="select-text" x-apple-data-detectors="false" style={{pointerEvents:'none'}}>{settings.contact_qq}</span>
+                    </span>
+                  )}
+                  {settings.contact_wechat && (
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                      <span>📱</span> 微信: {settings.contact_wechat}
+                    </span>
+                  )}
+                  {settings.contact_email && (
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                      <span>📧</span> {settings.contact_email}
+                    </span>
+                  )}
+                  {settings.contact_telegram && (
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                      <span>✈️</span> Telegram: {settings.contact_telegram}
+                    </span>
+                  )}
+                  {settings.contact_github && (
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                      <span>🐙</span> GitHub: {settings.contact_github}
+                    </span>
+                  )}
+                </div>
+              </section>
+            )}
+          </>
+        )}
       </main>
     </div>
   );

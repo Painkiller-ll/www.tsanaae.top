@@ -3,12 +3,12 @@ import { getSupabaseClient } from '@/storage/database/supabase-client';
 const supabase = getSupabaseClient();
 
 export async function POST(request: Request) {
-  // Migration endpoint - no auth required for one-time setup
-
   try {
     const results: Record<string, string[]> = {
       site_settings: [],
       music_tracks: [],
+      articles_table: [],
+      article_comments_table: [],
     };
 
     // === site_settings columns ===
@@ -55,7 +55,6 @@ export async function POST(request: Request) {
     }
 
     // === music_tracks columns ===
-    // Check if cover_image column exists by trying to select it
     const { data: musicCheck, error: musicError } = await supabase
       .from('music_tracks')
       .select('cover_image')
@@ -65,6 +64,30 @@ export async function POST(request: Request) {
       results.music_tracks.push('cover_image: 需手动添加 - 请在Supabase SQL Editor执行: ALTER TABLE music_tracks ADD COLUMN cover_image text DEFAULT \'\';');
     } else {
       results.music_tracks.push('cover_image: ok');
+    }
+
+    // === articles table ===
+    const { error: articlesError } = await supabase
+      .from('articles')
+      .select('id')
+      .limit(1);
+
+    if (articlesError) {
+      results.articles_table.push('articles表不存在，需手动创建 - 请在Supabase SQL Editor执行创建SQL');
+    } else {
+      results.articles_table.push('articles表: ok');
+    }
+
+    // === article_comments table ===
+    const { error: commentsError } = await supabase
+      .from('article_comments')
+      .select('id')
+      .limit(1);
+
+    if (commentsError) {
+      results.article_comments_table.push('article_comments表不存在，需手动创建 - 请在Supabase SQL Editor执行创建SQL');
+    } else {
+      results.article_comments_table.push('article_comments表: ok');
     }
 
     return NextResponse.json({

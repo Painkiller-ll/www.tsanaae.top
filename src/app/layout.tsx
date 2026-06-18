@@ -37,7 +37,7 @@ export default function RootLayout({
   const isDev = process.env.COZE_PROJECT_ENV === 'DEV';
 
   return (
-    <html lang="zh-CN" className="light">
+    <html lang="zh-CN" className="light" x-apple-data-detectors="false">
       <body className={`antialiased min-h-screen bg-background flex flex-col`}>
         <ThemeProvider>
           <SiteSettingsLoader />
