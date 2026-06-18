@@ -1,53 +1,58 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 const supabase = getSupabaseClient();
-import verifyAdminRequest from '@/lib/admin-verify';
 
 export async function POST(request: Request) {
   // Migration endpoint - no auth required for one-time setup
 
   try {
-    // Add missing columns to site_settings table
-    const migrations = [
-      { column: 'site_bg_color', type: 'TEXT', default: "'#0f0f13'" },
-      { column: 'site_card_color', type: 'TEXT', default: "'#1a1a24'" },
-      { column: 'site_accent_color', type: 'TEXT', default: "'#7c3aed'" },
-      { column: 'site_logo_url', type: 'TEXT', default: "''" },
-      { column: 'site_bg_image', type: 'TEXT', default: "''" },
-      { column: 'about_text', type: 'TEXT', default: "''" },
+    const results: Record<string, string[]> = {
+      site_settings: [],
+      music_tracks: [],
+    };
+
+    // === site_settings columns ===
+    const siteMigrations = [
+      { column: 'site_bg_color', default: '#0f0f13' },
+      { column: 'site_card_color', default: '#1a1a24' },
+      { column: 'site_accent_color', default: '#7c3aed' },
+      { column: 'site_logo_url', default: '' },
+      { column: 'site_bg_image', default: '' },
+      { column: 'about_text', default: '' },
     ];
 
-    const results = [];
-
-    for (const m of migrations) {
-      // Try to insert a default value - if column doesn't exist, Supabase will error
-      // We use a workaround: try to update with the column, if it fails the column doesn't exist
+    for (const m of siteMigrations) {
       const { error } = await supabase
         .from('site_settings')
-        .update({ [m.column]: m.default.replace(/'/g, '') })
+        .update({ [m.column]: m.default })
         .eq('id', 1);
 
       if (error) {
         if (error.message.includes('column') || error.message.includes('does not exist')) {
-          results.push({ column: m.column, status: 'needs_manual_add', error: error.message });
+          results.site_settings.push(`${m.column}: 需手动添加 - ${error.message}`);
         } else {
-          results.push({ column: m.column, status: 'error', error: error.message });
+          results.site_settings.push(`${m.column}: 错误 - ${error.message}`);
         }
       } else {
-        results.push({ column: m.column, status: 'ok' });
+        results.site_settings.push(`${m.column}: ok`);
       }
     }
 
-    // Also check current table structure
-    const { data, error: selectError } = await supabase
-      .from('site_settings')
-      .select('*')
-      .eq('id', 1)
-      .single();
+    // === music_tracks columns ===
+    // Check if cover_image column exists by trying to select it
+    const { data: musicCheck, error: musicError } = await supabase
+      .from('music_tracks')
+      .select('cover_image')
+      .limit(1);
+
+    if (musicError && (musicError.message.includes('column') || musicError.message.includes('does not exist'))) {
+      results.music_tracks.push('cover_image: 需手动添加 - 请在Supabase SQL Editor执行: ALTER TABLE music_tracks ADD COLUMN cover_image text DEFAULT \'\';');
+    } else {
+      results.music_tracks.push('cover_image: ok');
+    }
 
     return NextResponse.json({
       migrationResults: results,
-      currentData: selectError ? selectError.message : data,
     });
   } catch (err) {
     return NextResponse.json({

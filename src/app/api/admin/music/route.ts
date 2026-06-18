@@ -53,18 +53,34 @@ export async function POST(request: NextRequest) {
     const sortOrder = maxSort && maxSort.length > 0 ? (maxSort[0] as { sort_order: number }).sort_order + 1 : 0;
 
     // 写入数据库，file_url 字段存储在线URL
-    const { data, error } = await supabase
+    // 先尝试带 cover_image 插入，如果列不存在则去掉重试
+    const insertData: Record<string, unknown> = {
+      title,
+      artist: artist || null,
+      file_url: music_url,
+      sort_order: sortOrder,
+      is_active: true,
+    };
+    if (cover_image) insertData.cover_image = cover_image;
+
+    let { data, error } = await supabase
       .from('music_tracks')
-      .insert({
-        title,
-        artist: artist || null,
-        cover_image: cover_image || null,
-        file_url: music_url,
-        sort_order: sortOrder,
-        is_active: true,
-      })
+      .insert(insertData)
       .select()
       .single();
+
+    // 如果 cover_image 列不存在，去掉后重试
+    if (error && error.message && error.message.includes('cover_image')) {
+      const insertDataNoCover = { ...insertData };
+      delete insertDataNoCover.cover_image;
+      const retry = await supabase
+        .from('music_tracks')
+        .insert(insertDataNoCover)
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       console.error('[music POST] Supabase insert error:', JSON.stringify(error));
@@ -93,17 +109,31 @@ export async function PUT(request: NextRequest) {
     const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
     if (artist !== undefined) updateData.artist = artist;
-    if (cover_image !== undefined) updateData.cover_image = cover_image;
     if (music_url !== undefined) updateData.file_url = music_url;
     if (sort_order !== undefined) updateData.sort_order = sort_order;
     if (is_active !== undefined) updateData.is_active = is_active;
+    if (cover_image !== undefined) updateData.cover_image = cover_image;
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('music_tracks')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
+
+    // 如果 cover_image 列不存在，去掉后重试
+    if (error && error.message && error.message.includes('cover_image')) {
+      const updateDataNoCover = { ...updateData };
+      delete updateDataNoCover.cover_image;
+      const retry = await supabase
+        .from('music_tracks')
+        .update(updateDataNoCover)
+        .eq('id', id)
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) throw error;
 
