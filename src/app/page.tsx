@@ -134,6 +134,7 @@ function CategoryGrid({ categories, resourcesByType }: {
 export default function HomePage() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
   const [featuredResources, setFeaturedResources] = useState<Resource[]>([]);
+  const [articles, setArticles] = useState<{id:number;title:string;cover_image:string|null;author_name:string;created_at:string;category:string|null}[]>([]);
   const [siteDesc, setSiteDesc] = useState('');
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -148,6 +149,13 @@ export default function HomePage() {
       fetch('/api/resources?is_featured=true&limit=12&is_published=true')
         .then(r => r.json())
         .then(d => { if (d.data) setFeaturedResources(d.data); })
+        .catch(() => {}),
+      fetch('/api/articles?limit=6')
+        .then(r => r.json())
+        .then(d => {
+          const list = d.data || d || [];
+          setArticles(list.slice(0, 6));
+        })
         .catch(() => {}),
       fetch('/api/site-settings')
         .then(r => r.json())
@@ -185,8 +193,8 @@ export default function HomePage() {
               <CategoryGrid categories={categories} resourcesByType={{}} />
             </section>
 
-            {/* 投稿资源入口 - 手机端/平板端可见，桌面端隐藏 */}
-            <div className="md:hidden mb-6 mt-4">
+            {/* 投稿入口 */}
+            <div className="mb-6 mt-4">
               <a
                 href="/submit"
                 className="flex items-center justify-center gap-2 w-full sm:w-auto sm:inline-flex rounded-xl bg-gradient-to-r from-purple-600 to-violet-500 px-6 py-3 text-sm sm:text-base font-bold text-white shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] transition-all duration-200"
@@ -194,7 +202,7 @@ export default function HomePage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                 </svg>
-                投稿资源
+                投稿
               </a>
             </div>
 
@@ -218,6 +226,52 @@ export default function HomePage() {
                 </div>
               )}
             </section>
+
+            {/* 文章区 */}
+            {articles.length > 0 && (
+              <section className="mb-6 sm:mb-10">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                    </svg>
+                    <h2 className="text-base sm:text-xl font-bold text-foreground">文章</h2>
+                  </div>
+                  <a href="/articles" className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 transition-colors">
+                    查看全部 →
+                  </a>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {articles.map(art => (
+                    <a
+                      key={art.id}
+                      href={`/articles/${art.id}`}
+                      className="group block rounded-xl border border-white/8 bg-[#1a1a24] overflow-hidden hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all"
+                    >
+                      {art.cover_image && (
+                        <div className="aspect-[16/9] overflow-hidden">
+                          <img src={art.cover_image} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        </div>
+                      )}
+                      <div className="p-3 sm:p-4">
+                        <h3 className="text-sm sm:text-base font-medium text-white line-clamp-2 mb-2 group-hover:text-purple-300 transition-colors">{art.title}</h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span>{art.author_name || '匿名'}</span>
+                          <span>·</span>
+                          <span>{new Date(art.created_at).toLocaleDateString('zh-CN')}</span>
+                          {art.category && (
+                            <>
+                              <span>·</span>
+                              <span className="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">{art.category}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* 关于/联系方式 */}
             {(settings.about_text || settings.contact_qq || settings.contact_wechat || settings.contact_email || settings.contact_telegram || settings.contact_github) && (

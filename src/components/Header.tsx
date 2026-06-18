@@ -107,6 +107,15 @@ export default function Header({ onOpenAuth }: HeaderProps) {
               <span>推荐</span>
             </Link>
             <Link
+              href="/submit"
+              className="px-3 py-1.5 text-sm text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 transition-colors flex items-center gap-1.5 font-medium"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+              </svg>
+              <span>投稿</span>
+            </Link>
+            <Link
               href="/articles"
               className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors"
             >
