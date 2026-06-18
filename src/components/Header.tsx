@@ -223,6 +223,28 @@ export default function Header({ onOpenAuth }: HeaderProps) {
               </svg>
               <span>推荐</span>
             </Link>
+            <div className="border-t border-border my-1" />
+            <Link
+              href="/articles"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 font-semibold"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+              <span>文章</span>
+            </Link>
+            <Link
+              href="/articles/submit"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:text-green-300 rounded-lg hover:bg-green-500/10 font-semibold"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>发布文章</span>
+            </Link>
           </div>
         )}
       </div>

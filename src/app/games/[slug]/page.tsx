@@ -3,93 +3,65 @@
 import { useEffect, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { useParams } from 'next/navigation';
-import { Game, GameTag } from '@/lib/types';
+import { Game } from '@/lib/types';
 import Header from '@/components/Header';
 import GameCard from '@/components/GameCard';
-import Link from 'next/link';
 
-const SLUG_TO_CATEGORY: Record<string, string> = {
-  pc: 'cat-pc',
-  mobile: 'cat-mobile',
-  web: 'cat-web',
-};
-
-const SLUG_TO_TITLE: Record<string, string> = {
-  pc: '电脑游戏',
-  mobile: '手机游戏',
-  web: '网页游戏',
-};
-
-const SLUG_TO_DESC: Record<string, string> = {
-  pc: '精选优质电脑游戏资源',
-  mobile: '精选优质手机游戏资源',
-  web: '精选优质网页游戏资源',
-};
+interface CategoryInfo {
+  id: number;
+  name: string;
+  slug: string;
+  resource_type: string;
+  icon: string;
+  sort_order: number;
+}
 
 export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [games, setGames] = useState<Game[]>([]);
-  const [tags, setTags] = useState<GameTag[]>([]);
-  const [selectedTag, setSelectedTag] = useState<number|string>('');
   const [loading, setLoading] = useState(true);
-
-  const categoryId = SLUG_TO_CATEGORY[slug] || '';
-  const title = SLUG_TO_TITLE[slug] || '游戏';
-  const description = SLUG_TO_DESC[slug] || '';
+  const [categoryInfo, setCategoryInfo] = useState<CategoryInfo | null>(null);
 
   useEffect(() => {
-    fetch('/api/tags')
-      .then((res) => res.json())
+    // 先获取分类信息
+    fetch('/api/categories')
+      .then(async (res) => { const t = await res.text(); return t ? JSON.parse(t) : null; })
       .then((data) => {
-        if (data.tags) setTags(data.tags);
+        if (data?.categories) {
+          const cat = data.categories.find((c: CategoryInfo) => c.slug === slug);
+          if (cat) setCategoryInfo(cat);
+        }
       })
       .catch(() => {});
-  }, []);
+  }, [slug]);
 
   useEffect(() => {
-    if (!categoryId) return;
+    if (!slug) return;
     setLoading(true);
-    const url = selectedTag
-      ? `/api/games?category=${categoryId}&tag=${selectedTag}&limit=50`
-      : `/api/games?category=${categoryId}&limit=50`;
-    fetch(url)
+    // 使用 slug 作为 resource_type 查询
+    fetch(`/api/games?category=cat-${slug}&limit=50`)
       .then(async (res) => { const t = await res.text(); return t ? JSON.parse(t) : null; })
       .then((data) => {
         if (data?.games) setGames(data.games);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [categoryId, selectedTag]);
+  }, [slug]);
+
+  const title = categoryInfo?.name || slug;
+  const icon = categoryInfo?.icon || '📁';
 
   return (
     <div className="min-h-screen">
       <Header />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <PageHeader title={title} description={description} breadcrumbs={[{ label: '首页', href: '/' }, { label: title }]} />
-
-
-        {/* Tag Filters */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedTag('')}
-              className={`tag-pill ${!selectedTag ? '!bg-primary/30 !border-primary/50' : ''}`}
-            >
-              全部
-            </button>
-            {tags.map((tag) => (
-              <button
-                key={tag.id}
-                onClick={() => setSelectedTag(tag.id)}
-                className={`tag-pill ${selectedTag === tag.id ? '!bg-primary/30 !border-primary/50' : ''}`}
-              >
-                {tag.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        <PageHeader 
+          title={title} 
+          description={`${title}相关资源`} 
+          breadcrumbs={[{ label: '首页', href: '/' }, { label: title }]} 
+        />
 
         {/* Games Grid */}
         {loading ? (
@@ -105,7 +77,7 @@ export default function CategoryPage() {
           </div>
         ) : games.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">暂无游戏数据</p>
+            <p className="text-muted-foreground">暂无资源</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

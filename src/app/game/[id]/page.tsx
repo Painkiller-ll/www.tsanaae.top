@@ -349,7 +349,7 @@ export default function GameDetailPage() {
           title={game.title}
           breadcrumbs={[
             { label: '首页', href: '/' },
-            ...(game.categories ? [{ label: game.categories.name, href: `/games/${game.categories.slug}` }] : []),
+            ...(game.categories ? [{ label: game.categories.name, href: `/resources/${game.categories.slug}` }] : []),
             { label: game.title }
           ]}
         />
