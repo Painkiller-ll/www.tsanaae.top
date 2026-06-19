@@ -1,11 +1,168 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { type ResourceCategory } from '@/lib/types';
 
 type Tab = 'resource' | 'article';
+
+/** 通用图片上传组件 - 支持拖拽/点击上传+预览+URL粘贴 */
+function ImageUploader({ value, onChange, label }: {
+  value: string;
+  onChange: (url: string) => void;
+  label?: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const doUpload = async (file: File) => {
+    setError('');
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('仅支持 JPG/PNG/GIF/WebP 格式');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('图片大小不能超过5MB');
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload-cover', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setError(data.error || '上传失败');
+        return;
+      }
+      onChange(data.url);
+    } catch {
+      setError('上传失败，请重试');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) doUpload(file);
+    // 重置input以便再次选同一文件
+    e.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) doUpload(file);
+  };
+
+  return (
+    <div>
+      {label && <label className="block text-sm font-medium text-gray-300 mb-1.5">{label}</label>}
+
+      {/* 已有图片时显示预览 */}
+      {value ? (
+        <div className="relative group">
+          <div className="rounded-lg overflow-hidden border border-white/10 bg-[#1a1a24]">
+            <img
+              src={value}
+              alt="封面预览"
+              className="w-full h-40 object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="text"
+              value={value}
+              onChange={e => onChange(e.target.value)}
+              className="flex-1 rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 text-xs text-white/70 focus:border-purple-500 focus:outline-none transition-colors"
+              placeholder="图片链接"
+            />
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-colors"
+            >
+              删除
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+          className={`
+            flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-all
+            ${dragOver ? 'border-purple-500 bg-purple-500/10' : 'border-white/15 hover:border-purple-500/50 hover:bg-white/[0.02]'}
+            ${uploading ? 'pointer-events-none opacity-60' : ''}
+          `}
+        >
+          {uploading ? (
+            <>
+              <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-gray-400">上传中...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-sm text-gray-400">点击或拖拽上传封面图</span>
+              <span className="text-xs text-gray-600">支持 JPG/PNG/GIF/WebP，最大 5MB</span>
+            </>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </div>
+      )}
+
+      {/* URL粘贴备选（无图时显示） */}
+      {!value && (
+        <div className="mt-2">
+          <details className="group">
+            <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400 transition-colors list-none flex items-center gap-1">
+              <svg className="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              也可以粘贴图片链接
+            </summary>
+            <input
+              type="url"
+              placeholder="https://example.com/image.jpg"
+              className="mt-2 w-full rounded-lg border border-white/10 bg-[#1a1a24] px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-purple-500 focus:outline-none transition-colors"
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const v = (e.target as HTMLInputElement).value.trim();
+                  if (v) onChange(v);
+                }
+              }}
+              onBlur={e => {
+                const v = e.target.value.trim();
+                if (v) onChange(v);
+              }}
+            />
+          </details>
+        </div>
+      )}
+
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+    </div>
+  );
+}
 
 export default function SubmitPage() {
   const searchParams = useSearchParams();
@@ -225,15 +382,16 @@ export default function SubmitPage() {
                 <textarea value={resForm.description} onChange={e => setResForm(f => ({ ...f, description: e.target.value }))} placeholder="简单介绍一下这个资源..." rows={3} className={`${inputCls} resize-none`} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>封面图URL</label>
-                  <input type="url" value={resForm.cover_url} onChange={e => setResForm(f => ({ ...f, cover_url: e.target.value }))} placeholder="https://..." className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>资源作者</label>
-                  <input type="text" value={resForm.author} onChange={e => setResForm(f => ({ ...f, author: e.target.value }))} placeholder="原作者名称" className={inputCls} />
-                </div>
+              {/* 封面图上传 */}
+              <ImageUploader
+                value={resForm.cover_url}
+                onChange={url => setResForm(f => ({ ...f, cover_url: url }))}
+                label="封面图（可选）"
+              />
+
+              <div>
+                <label className={labelCls}>资源作者</label>
+                <input type="text" value={resForm.author} onChange={e => setResForm(f => ({ ...f, author: e.target.value }))} placeholder="原作者名称" className={inputCls} />
               </div>
 
               <div>
@@ -308,10 +466,12 @@ export default function SubmitPage() {
                 </div>
               </div>
 
-              <div>
-                <label className={labelCls}>封面图片URL</label>
-                <input type="text" value={artForm.cover_image} onChange={e => setArtForm(f => ({ ...f, cover_image: e.target.value }))} placeholder="可选，填入图片链接" className={inputCls} />
-              </div>
+              {/* 封面图上传 */}
+              <ImageUploader
+                value={artForm.cover_image}
+                onChange={url => setArtForm(f => ({ ...f, cover_image: url }))}
+                label="封面图（可选）"
+              />
 
               <div>
                 <label className={labelCls}>文章内容 <span className="text-red-400">*</span></label>
