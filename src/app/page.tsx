@@ -208,8 +208,8 @@ export default function HomePage() {
           </div>
         ) : (
           <>
-            {/* 公告/广告区 - 桌面端显示在顶部 */}
-            <div className="mb-6 sm:mb-8 hidden md:block">
+            {/* 公告/广告区 */}
+            <div className="mb-6 sm:mb-8">
               <AnnouncementBar />
             </div>
 
@@ -224,11 +224,6 @@ export default function HomePage() {
             <section className="mb-6 sm:mb-8">
               <CategoryGrid categories={categories} resourcesByType={{}} />
             </section>
-
-            {/* 公告/广告区 - 移动端显示在分类和精选之间 */}
-            <div className="mb-6 md:hidden">
-              <AnnouncementBar />
-            </div>
 
             {/* 投稿入口 - 仅手机/平板可见 */}
             <div className="mb-6 mt-4 md:hidden">
