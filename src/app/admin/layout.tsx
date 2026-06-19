@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/admin/resource-categories', label: '分类管理', icon: '📂' },
   { href: '/admin/tags', label: '标签管理', icon: '🏷️' },
   { href: '/admin/announcements', label: '公告管理', icon: '📢' },
+  { href: '/admin/ads', label: '广告管理', icon: '💰' },
   { href: '/admin/faqs', label: 'FAQ管理', icon: '❓' },
   { href: '/admin/music', label: '音乐管理', icon: '🎵' },
   { href: '/admin/articles', label: '文章审核', icon: '📝' },

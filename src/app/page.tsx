@@ -160,6 +160,7 @@ export default function HomePage() {
   const articleTotalPages = Math.ceil(articleTotal / ARTICLE_PAGE_SIZE);
   const [siteDesc, setSiteDesc] = useState('');
   const [settings, setSettings] = useState<Record<string, string>>({});
+  const [ads, setAds] = useState<{id:number;title:string;content:string;link_url:string;link_text:string;bg_color:string}[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -185,7 +186,12 @@ export default function HomePage() {
         .then(d => {
           if (d.site_description) setSiteDesc(d.site_description);
           setSettings(d);
-        }),
+        })
+        .catch(() => {}),
+      fetch('/api/ads')
+        .then(r => r.json())
+        .then(d => { if (d.ads) setAds(d.ads); })
+        .catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [articlePage]);
 
