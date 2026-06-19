@@ -28,6 +28,13 @@ interface Settings {
   promo_mini_program_name: string;
   promo_tags: string;
   promo_icon_url: string;
+  banner_title: string;
+  banner_subtitle: string;
+  banner_link_url: string;
+  banner_link_text: string;
+  banner_bg_color: string;
+  banner_enabled: boolean;
+  banner_items: { text: string; link?: string }[];
 }
 
 export default function AdminSettingsPage() {
@@ -56,6 +63,13 @@ export default function AdminSettingsPage() {
     promo_mini_program_name: '',
     promo_tags: '免费资源,收益支持',
     promo_icon_url: '',
+    banner_title: '',
+    banner_subtitle: '',
+    banner_link_url: '',
+    banner_link_text: '',
+    banner_bg_color: '',
+    banner_enabled: true,
+    banner_items: [],
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -296,6 +310,73 @@ export default function AdminSettingsPage() {
           <input type="text" value={settings.promo_tags} onChange={e => setSettings({ ...settings, promo_tags: e.target.value })} placeholder="免费资源,收益支持,限时优惠" className={inputClass} />
           <p className="text-xs text-[#71717a] mt-1">可选标签: 免费资源、收益支持、限时优惠、精选推荐、新用户福利</p>
         </div>
+      </div>
+
+      {/* 首页公告/广告横幅设置 */}
+      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📢</span>
+          <h3 className="text-base font-bold text-yellow-400">首页公告横幅</h3>
+        </div>
+        <p className="text-xs text-[#71717a]">设置首页顶部的公告/广告区域，支持多条内容轮播和链接跳转</p>
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-[#e4e4e7]">启用横幅</label>
+          <button
+            type="button"
+            onClick={() => setSettings({ ...settings, banner_enabled: !settings.banner_enabled })}
+            className={`w-12 h-6 rounded-full transition-colors ${settings.banner_enabled ? 'bg-yellow-500' : 'bg-[#333]'}`}
+          >
+            <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${settings.banner_enabled ? 'translate-x-6.5' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        {settings.banner_enabled && (
+          <div className="space-y-3">
+            <div>
+              <label className={labelClass}>主标题</label>
+              <input type="text" value={settings.banner_title} onChange={e => setSettings({ ...settings, banner_title: e.target.value })} placeholder="欢迎来到资源站" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>副标题</label>
+              <input type="text" value={settings.banner_subtitle} onChange={e => setSettings({ ...settings, banner_subtitle: e.target.value })} placeholder="发现你需要的资源" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>跳转链接文字</label>
+              <input type="text" value={settings.banner_link_text} onChange={e => setSettings({ ...settings, banner_link_text: e.target.value })} placeholder="点击了解" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>跳转链接地址</label>
+              <input type="text" value={settings.banner_link_url} onChange={e => setSettings({ ...settings, banner_link_url: e.target.value })} placeholder="https://example.com" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>背景色</label>
+              <div className="flex gap-2 items-center">
+                <input type="text" value={settings.banner_bg_color} onChange={e => setSettings({ ...settings, banner_bg_color: e.target.value })} placeholder="留空使用默认紫色渐变" className={inputClass} />
+                <div className="flex gap-1">
+                  {['', '#7c3aed', '#059669', '#dc2626', '#d97706', '#0891b2'].map(c => (
+                    <button key={c} type="button" onClick={() => setSettings({ ...settings, banner_bg_color: c })} className={`w-6 h-6 rounded border ${settings.banner_bg_color === c ? 'border-white' : 'border-[#333]'} ${c ? '' : 'bg-gradient-to-r from-purple-600 to-violet-500'}`} style={c ? { backgroundColor: c } : undefined} title={c || '默认渐变'} />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>公告条目（每行一条，格式：文字|链接）</label>
+              <textarea
+                value={Array.isArray(settings.banner_items) ? settings.banner_items.map((item: any) => `${item.text}${item.url ? '|' + item.url : ''}`).join('\n') : ''}
+                onChange={e => {
+                  const items = e.target.value.split('\n').filter(Boolean).map(line => {
+                    const parts = line.split('|');
+                    return { text: parts[0]?.trim() || '', url: parts[1]?.trim() || '' };
+                  });
+                  setSettings({ ...settings, banner_items: items });
+                }}
+                placeholder={"每行一条，格式示例：&#10;站长QQ交流群：123456|https://qm.qq.com/xxx&#10;新资源上线：闲鱼自动发货工具|/resource/9&#10;纯文字公告，不带链接"}
+                rows={5}
+                className="w-full rounded-lg bg-[#1a1a24] border border-[rgba(255,255,255,0.1)] px-3 py-2 text-sm text-[#e4e4e7] focus:border-purple-500 focus:outline-none"
+              />
+              <p className="text-xs text-[#71717a] mt-1">每行一条公告，用 | 分隔文字和链接，链接留空则不跳转</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

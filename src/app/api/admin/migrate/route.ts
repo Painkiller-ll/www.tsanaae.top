@@ -25,6 +25,11 @@ export async function POST(request: Request) {
       { column: 'promo_qr_code_url', default: '' },
       { column: 'promo_mini_program_name', default: '' },
       { column: 'promo_icon_url', default: '' },
+      { column: 'banner_title', default: '' },
+      { column: 'banner_subtitle', default: '' },
+      { column: 'banner_link_url', default: '' },
+      { column: 'banner_link_text', default: '' },
+      { column: 'banner_bg_color', default: '' },
     ];
 
     // promo_tags is jsonb, handle separately
@@ -36,6 +41,28 @@ export async function POST(request: Request) {
       results.site_settings.push(`promo_tags: 需手动添加 - ${tagError.message}`);
     } else {
       results.site_settings.push('promo_tags: ok');
+    }
+
+    // banner_enabled is boolean
+    const { error: bannerBoolError } = await supabase
+      .from('site_settings')
+      .update({ banner_enabled: true })
+      .eq('id', 1);
+    if (bannerBoolError) {
+      results.site_settings.push(`banner_enabled: 需手动添加 - ${bannerBoolError.message}`);
+    } else {
+      results.site_settings.push('banner_enabled: ok');
+    }
+
+    // banner_items is jsonb
+    const { error: bannerItemsError } = await supabase
+      .from('site_settings')
+      .update({ banner_items: [] })
+      .eq('id', 1);
+    if (bannerItemsError) {
+      results.site_settings.push(`banner_items: 需手动添加 - ${bannerItemsError.message}`);
+    } else {
+      results.site_settings.push('banner_items: ok');
     }
 
     for (const m of siteMigrations) {

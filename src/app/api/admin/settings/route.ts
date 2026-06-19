@@ -12,6 +12,8 @@ const ALLOWED_FIELDS = [
   'site_logo_url', 'site_bg_image', 'about_text',
   'footer_links',
   'promo_title', 'promo_description', 'promo_qr_code_url', 'promo_mini_program_name', 'promo_tags', 'promo_icon_url',
+  'banner_title', 'banner_subtitle', 'banner_link_url', 'banner_link_text', 'banner_bg_color', 'banner_enabled',
+  'banner_items',
 ] as const;
 
 type AllowedField = typeof ALLOWED_FIELDS[number];
@@ -35,8 +37,8 @@ export async function PUT(request: Request) {
     const dbKey = fieldMapping[bodyKey] || bodyKey;
 
     if ((ALLOWED_FIELDS as readonly string[]).includes(dbKey)) {
-      if (dbKey === 'footer_links') {
-        // footer_links is jsonb, store as array
+      if (dbKey === 'footer_links' || dbKey === 'banner_items') {
+        // jsonb fields, store as array
         update[dbKey] = Array.isArray(bodyValue) ? bodyValue : [];
       } else if (dbKey === 'promo_tags') {
         // promo_tags: comma-separated string → jsonb array

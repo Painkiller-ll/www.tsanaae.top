@@ -38,6 +38,13 @@ export async function GET() {
     promo_tags: typeof data.promo_tags === 'string' ? data.promo_tags : (Array.isArray(data.promo_tags) ? data.promo_tags.join(',') : ''),
     promo_icon_url: data.promo_icon_url || '',
     footer_links: data.footer_links || [],
+    banner_title: data.banner_title || '',
+    banner_subtitle: data.banner_subtitle || '',
+    banner_link_url: data.banner_link_url || '',
+    banner_link_text: data.banner_link_text || '',
+    banner_bg_color: data.banner_bg_color || '',
+    banner_enabled: data.banner_enabled !== false,
+    banner_items: data.banner_items || [],
   };
 
   return NextResponse.json(result);
